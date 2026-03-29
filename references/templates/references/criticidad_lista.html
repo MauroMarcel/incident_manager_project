@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Criticidades - Gestor de Referencias{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>Criticidades</h1>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'criticidad-create' %}" class="btn btn-primary">
+            + Nueva Criticidad
+        </a>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <input type="text" name="search" class="form-control" placeholder="Buscar por nombre o código" value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-4">
+                <select name="active" class="form-select">
+                    <option value="">-- Todos --</option>
+                    <option value="true" {% if request.GET.active == 'true' %}selected{% endif %}>Activas</option>
+                    <option value="false" {% if request.GET.active == 'false' %}selected{% endif %}>Inactivas</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-info w-100">Filtrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tabla -->
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Estado</th>
+                    <th class="table-actions">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for criticidad in criticidades %}
+                <tr>
+                    <td>
+                        <a href="{% url 'criticidad-detail' criticidad.pk %}">
+                            <strong>{{ criticidad.code }}</strong>
+                        </a>
+                    </td>
+                    <td>{{ criticidad.name }}</td>
+                    <td>
+                        {% if criticidad.active %}
+                            <span class="badge bg-success">Activa</span>
+                        {% else %}
+                            <span class="badge bg-danger">Inactiva</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-custom btn-group-sm">
+                            <a href="{% url 'criticidad-update' criticidad.pk %}" class="btn btn-warning">
+                                Editar
+                            </a>
+                            <a href="{% url 'criticidad-delete' criticidad.pk %}" class="btn btn-danger">
+                                Eliminar
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-4">
+                        No hay criticidades registradas
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Paginación -->
+{% if is_paginated %}
+<nav aria-label="Paginación" class="mt-4">
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">Primera</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+            </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+            {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última</a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

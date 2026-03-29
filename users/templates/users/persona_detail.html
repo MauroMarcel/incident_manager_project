@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}{{ persona.nombre }} {{ persona.apellidos }} - Personas{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>{{ persona.nombre }} {{ persona.apellidos }}</h1>
+        <p class="text-muted">ID: <strong>{{ persona.identificador_interno }}</strong></p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'persona-update' persona.pk %}" class="btn btn-warning">
+            Editar
+        </a>
+        <a href="{% url 'persona-delete' persona.pk %}" class="btn btn-danger">
+            Eliminar
+        </a>
+        <a href="{% url 'persona-list' %}" class="btn btn-secondary">
+            Volver
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Información Personal</h5>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Nombre</label>
+                        <p class="fs-5">{{ persona.nombre }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Apellidos</label>
+                        <p class="fs-5">{{ persona.apellidos }}</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Email</label>
+                        <p class="fs-5"><a href="mailto:{{ persona.email }}">{{ persona.email }}</a></p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">ID Interno</label>
+                        <p class="fs-5">{{ persona.identificador_interno }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Información Laboral</h5>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Departamento</label>
+                        <p class="fs-5">
+                            {% if persona.departamento %}
+                                <a href="{% url 'departamento-detail' persona.departamento.pk %}">{{ persona.departamento.name }}</a>
+                            {% else %}
+                                <span class="text-muted">No asignado</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Cargo</label>
+                        <p class="fs-5">
+                            {% if persona.cargo %}
+                                {{ persona.cargo.name }}
+                            {% else %}
+                                <span class="text-muted">No asignado</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Categoría</label>
+                        <p class="fs-5">
+                            {% if persona.categoria_persona %}
+                                {{ persona.categoria_persona.name }}
+                            {% else %}
+                                <span class="text-muted">No asignada</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Nivel Privilegio</label>
+                        <p class="fs-5">
+                            {% if persona.nivel_privilegio %}
+                                {{ persona.nivel_privilegio.name }}
+                            {% else %}
+                                <span class="text-muted">No asignado</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Jefe Directo</label>
+                        <p class="fs-5">
+                            {% if persona.jefe_directo %}
+                                <a href="{% url 'persona-detail' persona.jefe_directo.pk %}">
+                                    {{ persona.jefe_directo.nombre }} {{ persona.jefe_directo.apellidos }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">No asignado</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Estado</label>
+                        <p class="fs-5">
+                            {% if persona.estado_persona %}
+                                {{ persona.estado_persona.name }}
+                            {% else %}
+                                <span class="text-muted">No asignado</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Fechas Importantes</h5>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Fecha de Ingreso</label>
+                        <p class="fs-5">
+                            {% if persona.fecha_ingreso %}
+                                {{ persona.fecha_ingreso|date:"d/m/Y" }}
+                            {% else %}
+                                <span class="text-muted">No especificada</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Fecha de Baja</label>
+                        <p class="fs-5">
+                            {% if persona.fecha_baja %}
+                                {{ persona.fecha_baja|date:"d/m/Y" }}
+                            {% else %}
+                                <span class="text-muted">No especificada</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Estado</h5>
+                <p class="fs-5">
+                    {% if persona.active %}
+                        <span class="badge bg-success large">Activo</span>
+                    {% else %}
+                        <span class="badge bg-secondary large">Inactivo</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Información del Sistema</h5>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">ID</label>
+                    <p class="small font-monospace">{{ persona.id }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Usuario Django</label>
+                    <p class="small">
+                        {% if persona.usuario_django %}
+                            {{ persona.usuario_django.username }}
+                        {% else %}
+                            <span class="text-muted">No vinculado</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Creado</label>
+                    <p class="small">{{ persona.created|date:"d/m/Y H:i" }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Actualizado</label>
+                    <p class="small">{{ persona.updated|date:"d/m/Y H:i" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
