@@ -9,10 +9,15 @@
     </div>
 </div>
 
-<div class="card">
-    <div class="card-body">
-        <form method="post">
-            {% csrf_token %}
+<form method="post">
+    {% csrf_token %}
+
+    <!-- DATOS DEL INCIDENTE -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <strong>Datos del Incidente</strong>
+        </div>
+        <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-12">
                     <label class="form-label">Título</label>
@@ -34,22 +39,79 @@
                     <label class="form-label">Impacto</label>
                     {{ form.impacto }}
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label class="form-label">Fecha de Detección</label>
                     {{ form.fecha_deteccion }}
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
+                    <label class="form-label">Vía de Reporte</label>
+                    {{ form.via_reporte }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Sistema Operativo</label>
+                    {{ form.sistema_operativo }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Origen del Incidente</label>
+                    {{ form.origen_incidente }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DATOS DEL INFORMANTE -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <strong>Datos del Informante</strong>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
                     <label class="form-label">Reportado por</label>
                     {{ form.reportado_por }}
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label class="form-label">Asignado a</label>
                     {{ form.asignado_a }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DATOS DE LA ENTIDAD AFECTADA -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-dark">
+            <strong>Datos de la Entidad Afectada</strong>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Entidad Afectada</label>
+                    {{ form.entidad_afectada }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Dependencia Afectada</label>
+                    {{ form.dependencia_afectada }}
                 </div>
                 <div class="col-md-12">
                     <label class="form-label">Sistemas Afectados</label>
                     {{ form.sistemas_afectados }}
                 </div>
+                <div class="col-md-12">
+                    <label class="form-label">Recursos Afectados</label>
+                    {{ form.recursos_afectados }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACCIONES Y EVIDENCIAS -->
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <strong>Acciones y Evidencias</strong>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
                 <div class="col-md-12">
                     <label class="form-label">Acciones Tomadas</label>
                     {{ form.acciones_tomadas }}
@@ -58,12 +120,18 @@
                     <label class="form-label">Evidencias</label>
                     {{ form.evidencias }}
                 </div>
+                <div class="col-md-12">
+                    <label class="form-label">Otra Información de Interés</label>
+                    {{ form.otra_informacion }}
+                </div>
             </div>
-            <div class="mt-4">
-                <button type="submit" class="btn btn-primary">Guardar</button>
-                <a href="{% url 'incidente-list' %}" class="btn btn-secondary">Cancelar</a>
-            </div>
-        </form>
+        </div>
     </div>
-</div>
+
+    <div class="mb-4">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a href="{% url 'incidente-list' %}" class="btn btn-secondary">Cancelar</a>
+    </div>
+
+</form>
 {% endblock %}
