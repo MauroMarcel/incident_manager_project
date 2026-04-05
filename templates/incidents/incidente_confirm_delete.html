@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Eliminar Incidente{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body text-center">
+        <h3>¿Estás seguro que deseas eliminar el incidente?</h3>
+        <p class="text-danger"><strong>{{ incidente.codigo }} — {{ incidente.titulo }}</strong></p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+            <a href="{% url 'incidente-list' %}" class="btn btn-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

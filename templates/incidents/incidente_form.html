@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}{% if object %}Editar Incidente{% else %}Nuevo Incidente{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1>{% if object %}Editar Incidente {{ object.codigo }}{% else %}Nuevo Incidente{% endif %}</h1>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-12">
+                    <label class="form-label">Título</label>
+                    {{ form.titulo }}
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">Descripción</label>
+                    {{ form.descripcion }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Tipo de Incidente</label>
+                    {{ form.tipo_incidente }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Estado</label>
+                    {{ form.estado }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Impacto</label>
+                    {{ form.impacto }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Fecha de Detección</label>
+                    {{ form.fecha_deteccion }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Reportado por</label>
+                    {{ form.reportado_por }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Asignado a</label>
+                    {{ form.asignado_a }}
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">Sistemas Afectados</label>
+                    {{ form.sistemas_afectados }}
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">Acciones Tomadas</label>
+                    {{ form.acciones_tomadas }}
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">Evidencias</label>
+                    {{ form.evidencias }}
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <a href="{% url 'incidente-list' %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
