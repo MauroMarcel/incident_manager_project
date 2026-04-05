@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Tipos de Incidente{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>Tipos de Incidente</h1>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'tipo-incidente-create' %}" class="btn btn-primary">
+            + Nuevo Tipo
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-10">
+                <input type="text" name="search" class="form-control"
+                    placeholder="Buscar por código o nombre"
+                    value="{{ search }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-info w-100">Filtrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Activo</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tipo in tipos %}
+                <tr>
+                    <td><strong>{{ tipo.code }}</strong></td>
+                    <td>{{ tipo.name }}</td>
+                    <td>{{ tipo.descripcion|default:"-" }}</td>
+                    <td>
+                        {% if tipo.active %}
+                            <span class="badge bg-success">Activo</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactivo</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'tipo-incidente-update' tipo.pk %}" class="btn btn-sm btn-warning">Editar</a>
+                        <a href="{% url 'tipo-incidente-delete' tipo.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">No hay tipos de incidente registrados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
