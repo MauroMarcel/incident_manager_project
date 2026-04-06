@@ -13,4 +13,5 @@ urlpatterns = [
     path('referencias/', include('references.web_urls')),
     path('usuarios/', include('users.web_urls')),
     path('incidentes/', include('incidents.web_urls')),
+    path('reportes/', include('reports.web_urls')),
 ]

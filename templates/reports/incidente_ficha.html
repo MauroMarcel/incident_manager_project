@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Ficha - {{ incidente.codigo }}{% endblock %}
+
+{% block extra_styles %}
+<style>
+    @media print {
+        .sidebar, .navbar, footer, .no-print {
+            display: none !important;
+        }
+        .col-lg-10 {
+            width: 100% !important;
+            margin: 0 !important;
+        }
+    }
+    .ficha-table td, .ficha-table th {
+        border: 1px solid #000;
+        padding: 6px 10px;
+        font-size: 0.9rem;
+    }
+    .ficha-header {
+        background-color: #e9ecef;
+        font-weight: bold;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4 no-print">
+    <div class="col">
+        <h1>Ficha del Incidente {{ incidente.codigo }}</h1>
+    </div>
+    <div class="col text-end">
+        <button onclick="window.print()" class="btn btn-dark">
+            <i class="bi bi-printer"></i> Imprimir
+        </button>
+        <a href="{% url 'reporte-home' %}" class="btn btn-secondary">Volver</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="text-center mb-4 text-uppercase">
+            Modelo de Información para Reportar los Incidentes de Ciberseguridad
+        </h5>
+
+        <table class="table ficha-table">
+
+            <!-- DATOS DEL INFORMANTE -->
+            <tr>
+                <td colspan="6" class="ficha-header">Datos del Informante</td>
+            </tr>
+            <tr>
+                <td colspan="6">
+                    <strong>Nombre y apellidos:</strong>
+                    {{ incidente.reportado_por|default:"No especificado" }}
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <strong>Organismo:</strong>
+                    {{ incidente.entidad_afectada|default:"-" }}
+                </td>
+                <td colspan="2">
+                    <strong>Entidad:</strong>
+                    {{ incidente.dependencia_afectada|default:"-" }}
+                </td>
+                <td colspan="2">
+                    <strong>Cargo:</strong>
+                    {{ incidente.reportado_por.cargo|default:"-" }}
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <strong>Vía del reporte:</strong>
+                    {{ incidente.get_via_reporte_display }}
+                </td>
+                <td colspan="2">
+                    <strong>Fecha:</strong>
+                    {{ incidente.fecha_reporte|date:"d/m/Y" }}
+                </td>
+                <td>
+                    <strong>Hora:</strong>
+                    {{ incidente.fecha_reporte|date:"H:i" }}
+                </td>
+            </tr>
+
+            <!-- DATOS DE LA ENTIDAD AFECTADA -->
+            <tr>
+                <td colspan="6" class="ficha-header">Datos de la Entidad Afectada</td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <strong>Organismo:</strong>
+                    {{ incidente.entidad_afectada|default:"-" }}
+                </td>
+                <td colspan="3">
+                    <strong>Dependencia:</strong>
+                    {{ incidente.dependencia_afectada|default:"-" }}
+                </td>
+            </tr>
+            <tr>
+                <td colspan="6">
+                    <strong>Sistemas Afectados:</strong>
+                    {{ incidente.sistemas_afectados|default:"-" }}
+                </td>
+            </tr>
+            <tr>
+                <td colspan="6">
+                    <strong>Recursos Afectados:</strong>
+                    {{ incidente.recursos_afectados|default:"-" }}
+                </td>
+            </tr>
+
+            <!-- DATOS DEL INCIDENTE -->
+            <tr>
+                <td colspan="6" class="ficha-header">Datos del Incidente</td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <strong>Categoría del incidente:</strong>
+                    {{ incidente.tipo_incidente|default:"-" }}
+                </td>
+                <td colspan="3">
+                    <strong>Clasificación/Peligrosidad:</strong>
+                    {{ incidente.get_impacto_display }}
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <strong>Fecha de detección:</strong>
+                    {{ incidente.fecha_deteccion|date:"d/m/Y" }}
+                </td>
+                <td colspan="2">
+                    <strong>Hora de detección:</strong>
+                    {{ incidente.fecha_deteccion|date:"H:i" }}
+                </td>
+                <td colspan="2">
+                    <strong>Sistema Operativo:</strong>
+                    {{ incidente.sistema_operativo|default:"-" }}
+                </td>
+            </tr>
+            <tr>
+                <td colspan="6">
+                    <strong>Origen del Incidente:</strong>
+                    {{ incidente.origen_incidente|default:"-" }}
+                </td>
+            </tr>
+            <tr>
+                <td colspan="6">
+                    <strong>Descripción del incidente:</strong><br>
+                    {{ incidente.descripcion }}
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <strong>Contramedidas aplicadas:</strong><br>
+                    {{ incidente.acciones_tomadas|default:"-" }}
+                </td>
+                <td colspan="3">
+                    <strong>Otra información de interés:</strong><br>
+                    {{ incidente.otra_informacion|default:"-" }}
+                </td>
+            </tr>
+
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,179 @@
+
+{% extends "base.html" %}
+
+{% block title %}Reportes{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1>Reportes</h1>
+    </div>
+</div>
+
+<!-- Tarjetas de resumen -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body text-center">
+                <h2>{{ total_incidentes }}</h2>
+                <p class="mb-0">Total Incidentes</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body text-center">
+                <h2>{{ total_abiertos }}</h2>
+                <p class="mb-0">Abiertos</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body text-center">
+                <h2>{{ total_cerrados }}</h2>
+                <p class="mb-0">Cerrados</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-secondary">
+            <div class="card-body text-center">
+                <h2>{{ total_rechazados }}</h2>
+                <p class="mb-0">Rechazados</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Por Estado -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <strong>Por Estado</strong>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Estado</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in por_estado %}
+                        <tr>
+                            <td>{{ item.estado }}</td>
+                            <td><span class="badge bg-primary">{{ item.total }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="2" class="text-center">Sin datos</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Por Impacto -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <strong>Por Impacto</strong>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Impacto</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in por_impacto %}
+                        <tr>
+                            <td>{{ item.impacto }}</td>
+                            <td><span class="badge bg-danger">{{ item.total }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="2" class="text-center">Sin datos</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Por Tipo -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <strong>Por Tipo</strong>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in por_tipo %}
+                        <tr>
+                            <td>{{ item.tipo_incidente__name|default:"Sin tipo" }}</td>
+                            <td><span class="badge bg-warning text-dark">{{ item.total }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="2" class="text-center">Sin datos</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Últimos incidentes -->
+<div class="card">
+    <div class="card-header bg-dark text-white">
+        <strong>Últimos 5 Incidentes</strong>
+    </div>
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Título</th>
+                    <th>Estado</th>
+                    <th>Impacto</th>
+                    <th>Fecha</th>
+                    <th>Ficha</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for incidente in ultimos_incidentes %}
+                <tr>
+                    <td><strong>{{ incidente.codigo }}</strong></td>
+                    <td>{{ incidente.titulo }}</td>
+                    <td>{{ incidente.get_estado_display }}</td>
+                    <td>{{ incidente.get_impacto_display }}</td>
+                    <td>{{ incidente.fecha_reporte|date:"d/m/Y" }}</td>
+                    <td>
+                        <a href="{% url 'incidente-ficha' incidente.pk %}" 
+                           class="btn btn-sm btn-outline-dark">
+                            Ver Ficha
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No hay incidentes registrados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
