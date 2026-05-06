@@ -23,33 +23,6 @@ class Tipo_Incidente(Modelo_Nomenclador):
 
 class Incidente(ModeloBase):
 
-    ESTADOS = (
-        ('REP', 'Reportado'),
-        ('ASI', 'Asignado'),
-        ('INV', 'En Investigación'),
-        ('CON', 'Contenido'),
-        ('ERD', 'Eradicado'),
-        ('RCV', 'Recuperación'),
-        ('RES', 'Resuelto'),
-        ('CER', 'Cerrado'),
-        ('RCH', 'Rechazado'),
-    )
-
-    IMPACTO = (
-        ('B', 'Bajo'),
-        ('M', 'Medio'),
-        ('A', 'Alto'),
-        ('X', 'Extremo'),
-    )
-
-    VIA_REPORTE = (
-        ('TEL', 'Teléfono'),
-        ('EMA', 'Correo Electrónico'),
-        ('PRE', 'Presencial'),
-        ('SIS', 'Sistema Automatizado'),
-        ('OTR', 'Otro'),
-    )
-
     # Identificación
     codigo = models.CharField(max_length=20, unique=True, editable=False)
     titulo = models.CharField(max_length=200)
