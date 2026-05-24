@@ -4,10 +4,9 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
-from .models import Persona, Categoria_Persona, Cargo, Estado_Persona, Nivel_Privilegio
+from .models import Persona, Categoria_Persona, Cargo, Estado_Persona
 from .forms import (
-    PersonaForm, Categoria_PersonaForm, CargoForm,
-    Estado_PersonaForm, Nivel_PrivilegioForm
+    PersonaForm, Categoria_PersonaForm, CargoForm, Estado_PersonaForm
 )
 
 
@@ -248,84 +247,6 @@ class Estado_PersonaDeleteView(LoginRequiredMixin, DeleteView):
         return response
 
 
-# ==================== NIVEL_PRIVILEGIO VIEWS ====================
-
-class Nivel_PrivilegioListView(LoginRequiredMixin, ListView):
-    """Lista todos los niveles de privilegio con búsqueda y filtrado"""
-    model = Nivel_Privilegio
-    template_name = 'users/nivel_privilegio_list.html'
-    context_object_name = 'niveles'
-    paginate_by = 20
-
-    def get_queryset(self):
-        queryset = Nivel_Privilegio.objects.all()
-        search = self.request.GET.get('search')
-        active = self.request.GET.get('active')
-        
-        if search:
-            queryset = queryset.filter(
-                Q(name__icontains=search) | Q(code__icontains=search)
-            )
-        
-        if active == 'true':
-            queryset = queryset.filter(active=True)
-        elif active == 'false':
-            queryset = queryset.filter(active=False)
-        
-        return queryset.order_by('name')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['search'] = self.request.GET.get('search', '')
-        context['active_filter'] = self.request.GET.get('active', '')
-        return context
-
-
-class Nivel_PrivilegioDetailView(LoginRequiredMixin, DetailView):
-    """Detalle de un nivel de privilegio"""
-    model = Nivel_Privilegio
-    template_name = 'users/nivel_privilegio_detail.html'
-    context_object_name = 'nivel'
-
-
-class Nivel_PrivilegioCreateView(LoginRequiredMixin, CreateView):
-    """Crear nuevo nivel de privilegio"""
-    model = Nivel_Privilegio
-    form_class = Nivel_PrivilegioForm
-    template_name = 'users/nivel_privilegio_form.html'
-    success_url = reverse_lazy('nivel-list')
-
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        messages.success(self.request, f'Nivel "{form.instance.name}" creado exitosamente.')
-        return response
-
-
-class Nivel_PrivilegioUpdateView(LoginRequiredMixin, UpdateView):
-    """Editar nivel de privilegio"""
-    model = Nivel_Privilegio
-    form_class = Nivel_PrivilegioForm
-    template_name = 'users/nivel_privilegio_form.html'
-    success_url = reverse_lazy('nivel-list')
-
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        messages.success(self.request, f'Nivel "{form.instance.name}" actualizado exitosamente.')
-        return response
-
-
-class Nivel_PrivilegioDeleteView(LoginRequiredMixin, DeleteView):
-    """Eliminar nivel de privilegio"""
-    model = Nivel_Privilegio
-    template_name = 'users/nivel_privilegio_confirm_delete.html'
-    success_url = reverse_lazy('nivel-list')
-
-    def delete(self, request, *args, **kwargs):
-        name = self.get_object().name
-        response = super().delete(request, *args, **kwargs)
-        messages.success(request, f'Nivel "{name}" eliminado exitosamente.')
-        return response
-
 
 # ==================== PERSONA VIEWS ====================
 
@@ -337,13 +258,11 @@ class PersonaListView(LoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        queryset = Persona.objects.select_related(
-            'departamento', 'categoria_persona', 'cargo',
+        queryset = Persona.objects.select_related( 'categoria_persona', 'cargo',
             'estado_persona', 'nivel_privilegio'
         )
         search = self.request.GET.get('search')
         active = self.request.GET.get('active')
-        departamento = self.request.GET.get('departamento')
         
         if search:
             queryset = queryset.filter(
@@ -358,16 +277,12 @@ class PersonaListView(LoginRequiredMixin, ListView):
         elif active == 'false':
             queryset = queryset.filter(active=False)
         
-        if departamento:
-            queryset = queryset.filter(departamento_id=departamento)
-        
         return queryset.order_by('apellidos', 'nombre')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['search'] = self.request.GET.get('search', '')
         context['active_filter'] = self.request.GET.get('active', '')
-        context['departamento_filter'] = self.request.GET.get('departamento', '')
         return context
 
 

@@ -23,13 +23,6 @@ urlpatterns = [
     path('estados/<uuid:pk>/editar/', web_views.Estado_PersonaUpdateView.as_view(), name='estado-update'),
     path('estados/<uuid:pk>/eliminar/', web_views.Estado_PersonaDeleteView.as_view(), name='estado-delete'),
     
-    # Nivel_Privilegio URLs
-    path('niveles/', web_views.Nivel_PrivilegioListView.as_view(), name='nivel-list'),
-    path('niveles/<uuid:pk>/', web_views.Nivel_PrivilegioDetailView.as_view(), name='nivel-detail'),
-    path('niveles/crear/', web_views.Nivel_PrivilegioCreateView.as_view(), name='nivel-create'),
-    path('niveles/<uuid:pk>/editar/', web_views.Nivel_PrivilegioUpdateView.as_view(), name='nivel-update'),
-    path('niveles/<uuid:pk>/eliminar/', web_views.Nivel_PrivilegioDeleteView.as_view(), name='nivel-delete'),
-    
     # Persona URLs
     path('personas/', web_views.PersonaListView.as_view(), name='persona-list'),
     path('personas/<uuid:pk>/', web_views.PersonaDetailView.as_view(), name='persona-detail'),

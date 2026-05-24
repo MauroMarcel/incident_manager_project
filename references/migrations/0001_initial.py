@@ -11,22 +11,4 @@ class Migration(migrations.Migration):
     dependencies = [
     ]
 
-    operations = [
-        migrations.CreateModel(
-            name='Departamento',
-            fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('updated', models.DateTimeField(auto_now=True)),
-                ('active', models.BooleanField(default=True)),
-                ('code', models.CharField(max_length=20, unique=True)),
-                ('name', models.CharField(max_length=100)),
-                ('centro_costo', models.CharField(blank=True, max_length=50)),
-            ],
-            options={
-                'verbose_name': 'Departamento',
-                'verbose_name_plural': 'Departamentos',
-                'ordering': ['name'],
-            },
-        ),
-    ]
+    operations = [ ]

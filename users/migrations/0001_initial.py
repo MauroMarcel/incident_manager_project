@@ -93,7 +93,6 @@ class Migration(migrations.Migration):
                 ('email', models.EmailField(max_length=254, unique=True)),
                 ('fecha_ingreso', models.DateField(blank=True, null=True)),
                 ('fecha_baja', models.DateField(blank=True, null=True)),
-                ('departamento', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='references.departamento')),
                 ('jefe_directo', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='subordinados', to='users.persona')),
                 ('usuario_django', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='perfil_persona', to=settings.AUTH_USER_MODEL)),
             ],

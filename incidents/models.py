@@ -1,25 +1,9 @@
 from django.db import models
-from references.models import ModeloBase, Modelo_Nomenclador
+from references.models import TipoIncidente
+from references.models import ModeloBase
 from users.models import Persona
 import datetime
 
-
-# ============================================================
-# NOMENCLADOR
-# ============================================================
-
-class Tipo_Incidente(Modelo_Nomenclador):
-    descripcion = models.TextField(blank=True)
-
-    class Meta:
-        verbose_name = "Tipo de Incidente"
-        verbose_name_plural = "Tipos de Incidentes"
-        ordering = ['name']
-
-
-# ============================================================
-# INCIDENTE
-# ============================================================
 
 class Incidente(ModeloBase):
 
@@ -28,24 +12,10 @@ class Incidente(ModeloBase):
     titulo = models.CharField(max_length=200)
     descripcion = models.TextField()
 
-    # Clasificación
-    tipo_incidente = models.ForeignKey(
-        Tipo_Incidente,
-        on_delete=models.SET_NULL,
-        null=True
-    )
-    estado = models.CharField(max_length=3, choices=ESTADOS, default='REP')
-    impacto = models.CharField(max_length=1, choices=IMPACTO, default='M')
-
     # Fechas
     fecha_deteccion = models.DateTimeField()
     fecha_reporte = models.DateTimeField(auto_now_add=True)
     fecha_cierre = models.DateTimeField(null=True, blank=True)
-
-    # Datos del informante
-    via_reporte = models.CharField(
-        max_length=3, choices=VIA_REPORTE, default='EMA'
-    )
 
     # Personas involucradas
     reportado_por = models.ForeignKey(

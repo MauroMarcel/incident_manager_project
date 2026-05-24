@@ -54,14 +54,6 @@
                 <h5 class="card-title">Información Laboral</h5>
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label class="form-label text-muted">Departamento</label>
-                        <p class="fs-5">
-                            {% if persona.departamento %}
-                                <a href="{% url 'departamento-detail' persona.departamento.pk %}">{{ persona.departamento.name }}</a>
-                            {% else %}
-                                <span class="text-muted">No asignado</span>
-                            {% endif %}
-                        </p>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-muted">Cargo</label>

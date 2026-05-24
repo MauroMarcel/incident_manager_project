@@ -1,116 +1,111 @@
 from django.db import models
-from django.contrib.auth.models import User
-from django.core.exceptions import PermissionDenied
-import uuid
-# Create your models here.
-class ModeloBase(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
-    active = models.BooleanField(default=True)
-    
+from base.models import ModeloBase, Modelo_Nomenclador
+
+# ============================================================
+# NOMENCLADORES
+# ============================================================
+
+class Categoria(Modelo_Nomenclador):
     class Meta:
-        abstract = True
-    
-class Modelo_Nomenclador(ModeloBase):
-    code = models.CharField(max_length=20, blank=False, unique=True)
-    name = models.CharField(max_length=300, blank=False, unique=True)
-    
-    class Meta:
-        abstract = True
+        verbose_name = "Categoria"
+        verbose_name_plural = "Categorias"
         ordering = ['name']
-    
-    def __str__(self):
-        return f"({self.code}) {self.name}"
-    
 
-class Departamento(Modelo_Nomenclador):
-    centro_costo = models.CharField(max_length=50, blank=True)
-    #jefe_departamento = models.ForeignKey('Persona',on_delete=models.SET_NULL,null=True,blank=True,related_name='departamentos_dirigidos')
-    
+class Subcategoria(Modelo_Nomenclador):
+    categoria = models.ForeignKey(
+        Categoria,
+        on_delete=models.PROTECT, 
+        related_name='subcategorias'
+        )
     class Meta:
-        verbose_name = "Departamento"
-        verbose_name_plural = "Departamentos"
+        verbose_name = "Subcategoria"
+        verbose_name_plural = "Subcategorias"
         ordering = ['name']
-    
 
-
-class Clasificacion_Sistema(Modelo_Nomenclador):
+class Prioridad(Modelo_Nomenclador):
     class Meta:
-        verbose_name = "Clasificacion_Sistema"
-        verbose_name_plural = "Clasificacion_Sistemas"
+        verbose_name = "Prioridad"
+        verbose_name_plural = "Prioridades"
         ordering = ['name']
-        
 
-class Criticidad(Modelo_Nomenclador):
+class EstadoIncidente(Modelo_Nomenclador):
     class Meta:
-        verbose_name = "Criticidad"
-        verbose_name_plural = "Criticidades"
+        verbose_name = "Estado del Incidente"
+        verbose_name_plural = "Estados del Incidente"
         ordering = ['name']
-        
-    
 
+class ImpactoIncidente(Modelo_Nomenclador):
+    class Meta:
+        verbose_name = "Impacto del Incidente"
+        verbose_name_plural = "Impactos del Incidente"
+        ordering = ['name']
 
-'''
-('DIR', 'Directorio Activo'),
+class TipoIncidente(Modelo_Nomenclador):
+    class Meta:
+        verbose_name = "Tipo del Incidente"
+        verbose_name_plural = "Tipos del Incidente"
+        ordering = ['name']
 
-('APP', 'Aplicación'),
+class Alcance(Modelo_Nomenclador):
+    class Meta:
+        verbose_name = "Alcance del Incidente"
+        verbose_name_plural = "Alcances del Incidente"
+        ordering = ['name']
 
-('DB', 'Base de Datos'),
+class VectorAtaque(Modelo_Nomenclador):
+    class Meta:
+        verbose_name = "Vector de Ataque"
+        verbose_name_plural = "Vectores de Ataque"
+        ordering = ['name']
 
-        ('SRV', 'Servidor'),
+class FuenteDeteccion(Modelo_Nomenclador):
+    class Meta:
+        verbose_name = "Fuente de Detección"
+        verbose_name_plural = "Fuentes de Detección"
+        ordering = ['name']
 
-        ('SaaS', 'Software como Servicio'),
+class Tecnologia(Modelo_Nomenclador):
+    class Meta:
+        verbose_name = "Tecnología"
+        verbose_name_plural = "Tecnologías"
+        ordering = ['name']
 
-        ('NET', 'Red/Infraestructura'),
+class Intencionalidad(Modelo_Nomenclador):
+    class Meta:
+        verbose_name = "Intencionalidad del Ataque"
+        verbose_name_plural = "Intencionalidades del Ataque"
+        ordering = ['name']
 
-    )
+class Peligrosidad(Modelo_Nomenclador):
+    class Meta:
+        verbose_name = "Peligrosidad del Incidente"
+        verbose_name_plural = "Peligrosidades del Incidente"
+        ordering = ['name']
 
-    CRITICIDAD = (
+class SistemaOperativo(Modelo_Nomenclador):
+    class Meta:
+        verbose_name = "Sistema Operativo"
+        verbose_name_plural = "Sistemas Operativos"
+        ordering = ['name']
 
-        ('B', 'Baja'),
+# ============================================================
+# NOMENCLADORES DE USUARIOS
+# ============================================================
 
-        ('M', 'Media'),
+class Categoria_Persona(Modelo_Nomenclador):
+    class Meta:
+        verbose_name = "Categoria_Persona"
+        verbose_name_plural = "Categorias_Personas"
+        ordering = ['name']
 
-        ('A', 'Alta'),
+class Cargo(Modelo_Nomenclador):
+    class Meta:
+        verbose_name = "Cargo"
+        verbose_name_plural = "Cargos"
+        ordering = ['name']
 
-        ('C', 'Crítica'),
-
-    )
-
-    nombre = models.CharField(max_length=200)
-
-    codigo = models.CharField(max_length=50, unique=True)
-
-    tipo = models.CharField(max_length=20, choices=TIPO_SISTEMA)
-
-    criticidad = models.CharField(max_length=1, choices=CRITICIDAD, default='M')
-
-    descripcion = models.TextField(blank=True)
-
-    responsable = models.ForeignKey(
-
-        'Persona',
-
-        on_delete=models.SET_NULL,
-
-        null=True,
-
-        related_name='sistemas_responsable'
-
-    )
-
-    url_acceso = models.URLField(blank=True)
-
-    class Meta:
-
-        verbose_name = "Sistema"
-
-        verbose_name_plural = "Sistemas"
-
-        ordering = ['nombre']
-
-    def __str__(self):
-
-        return f"{self.codigo} - {self.nombre}"
-'''
+class Estado_Persona(Modelo_Nomenclador):
+    class Meta:
+        verbose_name = "Estado_Persona"
+        verbose_name_plural = "Estados_Personas"
+        ordering = ['name']

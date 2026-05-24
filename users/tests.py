@@ -5,7 +5,7 @@ from .models import (
     Persona, Categoria_Persona, Cargo, 
     Estado_Persona, Nivel_Privilegio
 )
-from references.models import Departamento
+
 from datetime import date
 import uuid
 
@@ -156,10 +156,6 @@ class PersonaTests(TestCase):
     def setUp(self):
         """Configuración inicial para cada prueba"""
         # Crear referencias necesarias
-        self.departamento = Departamento.objects.create(
-            code='IT',
-            name='Información y Tecnología'
-        )
         self.categoria = Categoria_Persona.objects.create(
             code='EMP',
             name='Empleado'
@@ -183,7 +179,6 @@ class PersonaTests(TestCase):
             nombre='Juan',
             apellidos='Garcia Lopez',
             email='juan.garcia@example.com',
-            departamento=self.departamento,
             categoria_persona=self.categoria,
             cargo=self.cargo,
             estado_persona=self.estado,
@@ -220,7 +215,6 @@ class PersonaTests(TestCase):
     
     def test_persona_relaciones_foreignkey(self):
         """Verifica que las relaciones ForeignKey funcionan correctamente"""
-        self.assertEqual(self.persona.departamento, self.departamento)
         self.assertEqual(self.persona.categoria_persona, self.categoria)
         self.assertEqual(self.persona.cargo, self.cargo)
         self.assertEqual(self.persona.estado_persona, self.estado)
@@ -342,11 +336,8 @@ class PersonaTests(TestCase):
     
     def test_persona_foreignkey_delete_set_null(self):
         """Verifica que las ForeignKey establecen NULL si se elimina referencia"""
-        dept_id = self.persona.departamento.id
-        self.persona.departamento.delete()
         
         persona_reload = Persona.objects.get(id=self.persona.id)
-        self.assertIsNone(persona_reload.departamento)
     
     def test_persona_actualizar(self):
         """Verifica que se puede actualizar una Persona"""

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Persona, Categoria_Persona, Cargo, Estado_Persona, Nivel_Privilegio
+from .models import Persona, Categoria_Persona, Cargo, Estado_Persona
 
 
 class Categoria_PersonaForm(forms.ModelForm):
@@ -62,24 +62,7 @@ class Estado_PersonaForm(forms.ModelForm):
         }
 
 
-class Nivel_PrivilegioForm(forms.ModelForm):
-    active = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={
-        'class': 'form-check-input'
-    }))
-    
-    class Meta:
-        model = Nivel_Privilegio
-        fields = ['code', 'name', 'active']
-        widgets = {
-            'code': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Código único'
-            }),
-            'name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Nombre del nivel'
-            }),
-        }
+
 
 
 class PersonaForm(forms.ModelForm):
@@ -90,9 +73,7 @@ class PersonaForm(forms.ModelForm):
     class Meta:
         model = Persona
         fields = [
-            'identificador_interno', 'nombre', 'apellidos', 'email',
-            'departamento', 'categoria_persona', 'cargo', 'estado_persona',
-            'nivel_privilegio', 'jefe_directo', 'fecha_ingreso', 'fecha_baja',
+            'identificador_interno', 'nombre', 'apellidos', 'email', 'categoria_persona', 'cargo', 'estado_persona', 'jefe_directo', 'fecha_ingreso', 'fecha_baja',
             'usuario_django', 'active'
         ]
         widgets = {
@@ -112,9 +93,6 @@ class PersonaForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'correo@ejemplo.com'
             }),
-            'departamento': forms.Select(attrs={
-                'class': 'form-select'
-            }),
             'categoria_persona': forms.Select(attrs={
                 'class': 'form-select'
             }),
@@ -122,9 +100,6 @@ class PersonaForm(forms.ModelForm):
                 'class': 'form-select'
             }),
             'estado_persona': forms.Select(attrs={
-                'class': 'form-select'
-            }),
-            'nivel_privilegio': forms.Select(attrs={
                 'class': 'form-select'
             }),
             'jefe_directo': forms.Select(attrs={

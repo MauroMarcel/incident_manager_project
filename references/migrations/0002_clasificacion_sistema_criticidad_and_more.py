@@ -43,8 +43,5 @@ class Migration(migrations.Migration):
                 'ordering': ['name'],
             },
         ),
-        migrations.AlterModelOptions(
-            name='departamento',
-            options={'ordering': ['code'], 'verbose_name': 'Departamento', 'verbose_name_plural': 'Departamentos'},
-        ),
+
     ]
