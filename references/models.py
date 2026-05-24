@@ -2,7 +2,7 @@ from django.db import models
 from base.models import ModeloBase, Modelo_Nomenclador
 
 # ============================================================
-# NOMENCLADORES
+# NOMENCLADORES DE INCIDENTES
 # ============================================================
 
 class Categoria(Modelo_Nomenclador):
