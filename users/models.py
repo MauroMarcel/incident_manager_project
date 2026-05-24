@@ -13,7 +13,7 @@ class Persona(ModeloBase):
     cargo = models.ForeignKey(Cargo,on_delete=models.SET_NULL,null=True,)
     estado_persona = models.ForeignKey(Estado_Persona,on_delete=models.SET_NULL,null=True,)
     jefe_directo = models.ForeignKey('self',on_delete=models.SET_NULL,null=True,blank=True,related_name='subordinados')
-    fecha_ingreso = models.DateField(null=True, blank=True)
+    fecha_ingreso = models.DateField(null=False, blank=False)
     fecha_baja = models.DateField(null=True, blank=True)
     usuario_django = models.OneToOneField(settings.AUTH_USER_MODEL,on_delete=models.SET_NULL,related_name='perfil_persona')
     
