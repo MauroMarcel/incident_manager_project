@@ -73,7 +73,7 @@ class PersonaForm(forms.ModelForm):
     class Meta:
         model = Persona
         fields = [
-            'identificador_interno', 'nombre', 'apellidos', 'email', 'categoria_persona', 'cargo', 'estado_persona', 'jefe_directo', 'fecha_ingreso', 'fecha_baja',
+            'identificador_interno', 'nombre', 'apellidos', 'email', 'categoria_persona', 'cargo', 'estado_persona', 'jefe_directo', 'fecha_baja',
             'usuario_django', 'active'
         ]
         widgets = {
@@ -104,10 +104,6 @@ class PersonaForm(forms.ModelForm):
             }),
             'jefe_directo': forms.Select(attrs={
                 'class': 'form-select'
-            }),
-            'fecha_ingreso': forms.DateInput(attrs={
-                'class': 'form-control',
-                'type': 'date'
             }),
             'fecha_baja': forms.DateInput(attrs={
                 'class': 'form-control',

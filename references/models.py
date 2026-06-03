@@ -109,3 +109,21 @@ class Estado_Persona(Modelo_Nomenclador):
         verbose_name = "Estado_Persona"
         verbose_name_plural = "Estados_Personas"
         ordering = ['name']
+
+# ============================================================
+# NOMENCLADORES DE NOTIFICACIONES
+# ============================================================
+class Asunto_Notificacion(Modelo_Nomenclador):
+    class Meta:
+        verbose_name = "Asunto de Notificación"
+        verbose_name_plural = "Asuntos de Notificación"
+        ordering = ['name']
+
+class Estado_Notificacion(Modelo_Nomenclador):
+    class Meta:
+        verbose_name = "Estado de Notificación"
+        verbose_name_plural = "Estados de Notificación"
+        ordering = ['name']
+
+
+

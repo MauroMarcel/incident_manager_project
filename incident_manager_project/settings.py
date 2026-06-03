@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'incidents',
     'organization',
     'reports',
-    
+    'notifications',
 ]
 
 MIDDLEWARE = [
