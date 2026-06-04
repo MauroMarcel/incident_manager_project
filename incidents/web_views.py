@@ -4,14 +4,13 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from django.db.models import Q
 from .models import Incidente
-# from references.models import TipoIncidente
-
 
 # ==================== TIPO_INCIDENTE VIEWS ====================
 
 # ==================== INCIDENTE VIEWS ====================
 
 
+class IncidenteDeleteView(LoginRequiredMixin, DeleteView):
     model = Incidente
     template_name = 'incidents/incidente_confirm_delete.html'
     success_url = reverse_lazy('incidente-list')

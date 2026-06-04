@@ -28,19 +28,19 @@ class Prioridad(Modelo_Nomenclador):
         verbose_name_plural = "Prioridades"
         ordering = ['name']
 
-class EstadoIncidente(Modelo_Nomenclador):
+class Estado_Incidente(Modelo_Nomenclador):
     class Meta:
         verbose_name = "Estado del Incidente"
         verbose_name_plural = "Estados del Incidente"
         ordering = ['name']
 
-class ImpactoIncidente(Modelo_Nomenclador):
+class Impacto_Incidente(Modelo_Nomenclador):
     class Meta:
         verbose_name = "Impacto del Incidente"
         verbose_name_plural = "Impactos del Incidente"
         ordering = ['name']
 
-class TipoIncidente(Modelo_Nomenclador):
+class Tipo_Incidente(Modelo_Nomenclador):
     class Meta:
         verbose_name = "Tipo del Incidente"
         verbose_name_plural = "Tipos del Incidente"
@@ -52,13 +52,13 @@ class Alcance(Modelo_Nomenclador):
         verbose_name_plural = "Alcances del Incidente"
         ordering = ['name']
 
-class VectorAtaque(Modelo_Nomenclador):
+class Vector_Ataque(Modelo_Nomenclador):
     class Meta:
         verbose_name = "Vector de Ataque"
         verbose_name_plural = "Vectores de Ataque"
         ordering = ['name']
 
-class FuenteDeteccion(Modelo_Nomenclador):
+class Fuente_Deteccion(Modelo_Nomenclador):
     class Meta:
         verbose_name = "Fuente de Detección"
         verbose_name_plural = "Fuentes de Detección"
@@ -82,7 +82,7 @@ class Peligrosidad(Modelo_Nomenclador):
         verbose_name_plural = "Peligrosidades del Incidente"
         ordering = ['name']
 
-class SistemaOperativo(Modelo_Nomenclador):
+class Sistema_Operativo(Modelo_Nomenclador):
     class Meta:
         verbose_name = "Sistema Operativo"
         verbose_name_plural = "Sistemas Operativos"
@@ -125,5 +125,13 @@ class Estado_Notificacion(Modelo_Nomenclador):
         verbose_name_plural = "Estados de Notificación"
         ordering = ['name']
 
+# ============================================================
+# NOMENCLADORES DE INDICADORES DE COMPROMISO (IOC)
+# ============================================================
 
+class Tipo_IOC(Modelo_Nomenclador):
+    class Meta:
+        verbose_name = "Tipo de IOC"
+        verbose_name_plural = "Tipos de IOC"
+        ordering = ['name']
 

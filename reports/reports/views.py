@@ -2,7 +2,6 @@ from django.views.generic import ListView, DetailView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
 from incidents.models import Incidente
-from references.models import TipoIncidente
 from .models import Reporte
 
 

@@ -40,12 +40,13 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'base',
-    'users',
-    'references',
     'incidents',
-    'organization',
-    'reports',
+    'IoC',
     'notifications',
+    'organization',
+    'references',
+    'reports',
+    'users',
 ]
 
 MIDDLEWARE = [
