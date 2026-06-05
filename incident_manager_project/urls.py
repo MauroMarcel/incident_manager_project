@@ -1,6 +1,5 @@
 from django.contrib import admin
 from django.urls import path, include
-from incident_manager_project.views import HomeView
 
 urlpatterns = [
     path('', HomeView.as_view(), name='referencia-home'),
@@ -8,10 +7,10 @@ urlpatterns = [
     # Autenticación
     path('accounts/', include('django.contrib.auth.urls')),
     # API REST
-    path('api/', include('references.urls')),
+    #path('api/', include('references.urls')),
     # Vistas Web
-    path('referencias/', include('references.web_urls')),
-    path('usuarios/', include('users.web_urls')),
-    path('incidentes/', include('incidents.web_urls')),
-    path('reportes/', include('reports.web_urls')),
+    #path('referencias/', include('references.web_urls')),
+    #ath('usuarios/', include('users.web_urls')),
+    #path('incidentes/', include('incidents.web_urls')),
+    #path('reportes/', include('reports.web_urls')),
 ]

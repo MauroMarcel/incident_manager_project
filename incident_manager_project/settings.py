@@ -148,5 +148,5 @@ REST_FRAMEWORK = {
 
 # Authentication
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'referencia-home'  # Redirigir a una página de inicio después del login
+LOGIN_REDIRECT_URL = '/admin/'
 LOGOUT_REDIRECT_URL = 'login'

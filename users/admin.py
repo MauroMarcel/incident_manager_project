@@ -11,9 +11,6 @@ class PersonaAdmin(admin.ModelAdmin):
     #para colocar una barra de busqueda
     search_fields = ('identificador_interno', 'nombre', 'apellidos', 'email', 'cargo', 'estado_persona')
 
-admin.site.register(Categoria_Persona, NomencladorAdmin)
-admin.site.register(Cargo, NomencladorAdmin)
-admin.site.register(Estado_Persona, NomencladorAdmin)
 
 admin.site.register(Persona, PersonaAdmin)
 
