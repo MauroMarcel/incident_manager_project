@@ -3,272 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Gestor de Incidentes e Infraestructura{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <style>
-        body {
-            background-color: #f8f9fa;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        .navbar {
-            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .sidebar {
-            background-color: #fff;
-            border-right: 1px solid #dee2e6;
-            min-height: calc(100vh - 56px);
-            position: sticky;
-            top: 56px;
-            max-height: calc(100vh - 56px);
-            overflow-y: auto;
-        }
-        .sidebar .nav-link {
-            color: #495057;
-            border-left: 3px solid transparent;
-            transition: all 0.3s ease;
-        }
-        .sidebar .nav-link:hover {
-            background-color: #e9ecef;
-            border-left-color: #0d6efd;
-        }
-        .sidebar .nav-link.active {
-            color: #0d6efd;
-            background-color: #e7f1ff;
-            border-left-color: #0d6efd;
-            font-weight: 600;
-        }
-        .main-content {
-            flex: 1;
-            padding: 20px;
-        }
-        .card {
-            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
-            border: 1px solid #e9ecef;
-        }
-        .btn-group-custom {
-            gap: 5px;
-        }
-        .table-actions {
-            width: 120px;
-        }
-        footer {
-            background-color: #f8f9fa;
-            border-top: 1px solid #dee2e6;
-            padding: 20px;
-            margin-top: auto;
-            text-align: center;
-            color: #6c757d;
-            font-size: 0.875rem;
-        }
-        .app-title {
-            color: #fff;
-            font-weight: 700;
-            font-size: 1.5rem;
-        }
-        .breadcrumb-custom {
-            background-color: transparent;
-            padding: 10px 0;
-            margin-bottom: 20px;
-        }
-    </style>
+    <title>{% block title %}SGIC{% endblock %}</title>
+    <!-- Bootstrap CSS via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     {% block extra_styles %}{% endblock %}
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-dark sticky-top">
-        <div class="container-fluid">
-            <a class="app-title" href="/">
-                <i class="bi bi-shield-check"></i> Gestor de Incidentes
-            </a>
-            <div class="d-flex align-items-center text-white">
-                {% if user.is_authenticated %}
-                    <span class="me-3">
-                        <i class="bi bi-person-circle"></i> {{ user.username }}
-                    </span>
-                    <a href="{% url 'logout' %}" class="text-white text-decoration-none">
-                        <i class="bi bi-box-arrow-right"></i> Salir
-                    </a>
-                {% else %}
-                    <a href="{% url 'login' %}" class="text-white text-decoration-none">
-                        <i class="bi bi-box-arrow-in-left"></i> Iniciar Sesión
-                    </a>
-                {% endif %}
-            </div>
-        </div>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <!-- Nombre del sistema -->
+        <h1>Sistema Gestor de Incidentes</h1>
+        <!-- Usuario autenticado -->
+        <p>Bienvenido, {{ user.username }}!</p>
+        <!-- Botón logout -->
+        <a href="{% url 'logout' %}">Cerrar sesión</a>
     </nav>
 
-    <!-- Mensajes y Alertas -->
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show m-3" role="alert">
-                <i class="bi bi-info-circle"></i> {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
+    <div class="container-fluid">
+        <div class="row">
+        <!-- Sidebar -->
+            <aside class="col-md-3">
+                <!-- Inicio — todos los roles -->
+                <a href="#">Inicio</a>
+                <!-- Notificaciones — todos los roles -->
+                <a href="#">Notificaciones</a>
 
-    <div class="container-fluid flex-grow-1">
-        <div class="row h-100">
-            <!-- Sidebar -->
-            <nav class="col-lg-2 d-lg-block bg-light sidebar p-0">
-                <div class="position-sticky pt-3">
-                    <!-- Menu Home -->
-                    <ul class="nav flex-column px-2 mb-3">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'referencia-home' %}">
-                                <i class="bi bi-house-door"></i> Inicio
-                            </a>
-                        </li>
-                    </ul>
+                <!-- Incidentes — Admin, Supervisor, Especialista, Alta Gerencia -->
+                {% if es_admin or es_supervisor or es_especialista or es_alta_gerencia %}
+                <a href="#">Incidentes</a>
+                {% endif %}
 
-                    <hr class="my-2">
+                <!-- Reportes — Admin, Supervisor, Alta Gerencia -->
+                {% if es_admin or es_supervisor or es_alta_gerencia %}
+                <a href="#">Reportes</a>
+                {% endif %}
 
-                    <!-- Menu Referencias -->
-                    <div class="nav-section mb-3">
-                        <h6 class="px-3 text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">
-                            <i class="bi bi-cube"></i> Referencias
-                        </h6>
-                        <ul class="nav flex-column px-2">
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'departamento-list' %}">
-                                    <i class="bi bi-building"></i> Departamentos
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'clasificacion-list' %}">
-                                    <i class="bi bi-tags"></i> Clasificaciones
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'criticidad-list' %}">
-                                    <i class="bi bi-exclamation-triangle"></i> Criticidades
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <hr class="my-2">
-
-                    <!-- Menu Usuarios -->
-                    <div class="nav-section mb-3">
-                        <h6 class="px-3 text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">
-                            <i class="bi bi-people"></i> Usuarios
-                        </h6>
-                        <ul class="nav flex-column px-2">
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'persona-list' %}">
-                                    <i class="bi bi-person"></i> Personas
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'cargo-list' %}">
-                                    <i class="bi bi-briefcase"></i> Cargos
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'categoria-list' %}">
-                                    <i class="bi bi-tag"></i> Categorías
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'estado-list' %}">
-                                    <i class="bi bi-toggle-on"></i> Estados
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'nivel-list' %}">
-                                    <i class="bi bi-shield-lock"></i> Niveles
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <hr class="my-2">
-                    <!-- Menu Incidentes -->
-                    <div class="nav-section mb-3">
-                        <h6 class="px-3 text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">
-                            <i class="bi bi-shield-exclamation"></i> Incidentes
-                        </h6>
-                        <ul class="nav flex-column px-2">
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'incidente-list' %}">
-                                    <i class="bi bi-exclamation-triangle"></i> Incidentes
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'tipo-incidente-list' %}">
-                                    <i class="bi bi-collection"></i> Tipos de Incidente
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <hr class="my-2">
-                    <!-- Menu Reportes -->
-                    <div class="nav-section mb-3">
-                        <h6 class="px-3 text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">
-                            <i class="bi bi-file-earmark-bar-graph"></i> Reportes
-                        </h6>
-                        <ul class="nav flex-column px-2">
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'reporte-home' %}">
-                                    <i class="bi bi-bar-chart"></i> Reportes
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <hr class="my-2">
-                    <!-- Menu Administración -->
-                    <div class="nav-section mb-3">
-                        <h6 class="px-3 text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">
-                            <i class="bi bi-gear"></i> Administración
-                        </h6>
-                        <ul class="nav flex-column px-2">
-                            <li class="nav-item">
-                                <a class="nav-link" href="/admin/">
-                                    <i class="bi bi-speedometer2"></i> Panel Admin
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="/api/">
-                                    <i class="bi bi-diagram-3"></i> API REST
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <hr class="my-2">
-
-                    <!-- Info -->
-                    <div class="px-3 text-muted small">
-                        <p><strong>Versión:</strong> 1.0.0</p>
-                        <p><strong>Ambiente:</strong> {% if DEBUG %}Desarrollo{% else %}Producción{% endif %}</p>
-                    </div>
-                </div>
-            </nav>
-
-            <!-- Main content -->
-            <main class="col-lg-10 ms-sm-auto px-md-4 main-content">
+                <!-- Nomencladores — solo Admin -->
+                {% if es_admin %}
+                <a href="#">Nomencladores</a>
+                {% endif %}
+                <!-- Usuarios — solo Admin -->
+                {% if es_admin %}
+                <a href="#">Usuarios</a>
+                {% endif %}
+                <!-- Panel Admin — solo Admin -->
+                {% if es_admin %}
+                <a href="#">Panel Admin</a>
+                {% endif %}
+            </aside>
+        <!-- Contenido principal -->
+            <main class="col-md-9">
                 {% block content %}{% endblock %}
             </main>
         </div>
     </div>
 
     <!-- Footer -->
-    <footer>
-        <p class="mb-0">
-            &copy; 2026 Gestor de Incidentes e Infraestructura | 
-            <a href="/admin/" class="text-decoration-none">Admin</a> | 
-            <a href="/api/" class="text-decoration-none">API</a>
-        </p>
+    <footer class="bg-light text-center py-3">
+        <p>&copy; 2024 SGIC. Todos los derechos reservados.</p>
     </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap JS via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

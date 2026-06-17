@@ -1,94 +1,87 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Iniciar Sesión</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f3f3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
 
-{% block title %}Iniciar Sesión{% endblock %}
+        .login-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 350px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
 
-{% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card shadow">
-                <div class="card-body p-5">
-                    <h1 class="card-title text-center mb-4">Iniciar Sesión</h1>
-                    
-                    {% if form.non_field_errors %}
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <strong>Error de autenticación</strong>
-                            {% for error in form.non_field_errors %}
-                                <div>{{ error }}</div>
-                            {% endfor %}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endif %}
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
 
-                    <form method="post">
-                        {% csrf_token %}
-                        
-                        <div class="mb-3">
-                            <label for="id_username" class="form-label">Usuario</label>
-                            {% if form.username.errors %}
-                                <input type="text" class="form-control is-invalid" id="id_username" name="username" required autofocus>
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.username.errors %}{{ error }}{% endfor %}
-                                </div>
-                            {% else %}
-                                <input type="text" class="form-control" id="id_username" name="username" required autofocus>
-                            {% endif %}
-                        </div>
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #007bff;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
 
-                        <div class="mb-4">
-                            <label for="id_password" class="form-label">Contraseña</label>
-                            {% if form.password.errors %}
-                                <input type="password" class="form-control is-invalid" id="id_password" name="password" required>
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.password.errors %}{{ error }}{% endfor %}
-                                </div>
-                            {% else %}
-                                <input type="password" class="form-control" id="id_password" name="password" required>
-                            {% endif %}
-                        </div>
+        button:hover {
+            background: #0056b3;
+        }
 
-                        <button type="submit" class="btn btn-primary w-100 mb-3">
-                            Iniciar Sesión
-                        </button>
+        .errorlist {
+            color: red;
+            list-style: none;
+            padding: 0;
+        }
+        input {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        }
 
-                        <div class="text-center text-muted small">
-                            {% if next %}
-                                <input type="hidden" name="next" value="{{ next }}">
-                            {% endif %}
-                        </div>
-                    </form>
+        label {
+        font-weight: bold;
+        display: block;
+        }
+    </style>
+</head>
+<body>
 
-                    <hr class="my-4">
+<div class="login-container">
+    <h2>Iniciar Sesión</h2>
+    {% if form.non_field_errors %}
+    <p style="color:red">Las credenciales introducidas no son válidas.</p>
+    {% endif %}
+    <form method="POST" action="{% url 'login' %}">
+        {% csrf_token %}
+        
+        <label>Nombre de usuario</label>
+        {{ form.username }}
 
-                    <div class="text-center">
-                        <p class="text-muted mb-0">
-                            ¿No tienes cuenta? 
-                            <a href="{% url 'admin:index' %}" class="text-decoration-none">Contacta al administrador</a>
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="alert alert-info mt-4" role="alert">
-                <strong>Información:</strong> Usa tus credenciales para acceder al sistema.
-            </div>
-        </div>
-    </div>
+        <label>Contraseña</label>
+        {{ form.password }}
+        <button type="submit">Entrar</button>
+    </form>
+    
 </div>
-{% endblock %}
 
-{% block extra_styles %}
-<style>
-    body {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .card {
-        border: none;
-        border-radius: 10px;
-    }
-</style>
-{% endblock %}
+</body>
+</html>
