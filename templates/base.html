@@ -16,7 +16,10 @@
         <!-- Usuario autenticado -->
         <p>Bienvenido, {{ user.username }}!</p>
         <!-- Botón logout -->
-        <a href="{% url 'logout' %}">Cerrar sesión</a>
+        <form method="POST" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit">Cerrar sesión</button>
+        </form>
     </nav>
 
     <div class="container-fluid">
@@ -26,7 +29,7 @@
                 <!-- Inicio — todos los roles -->
                 <a href="#">Inicio</a>
                 <!-- Notificaciones — todos los roles -->
-                <a href="#">Notificaciones</a>
+                <a href="{% url 'notification-list' %}">Notificaciones</a>
 
                 <!-- Incidentes — Admin, Supervisor, Especialista, Alta Gerencia -->
                 {% if es_admin or es_supervisor or es_especialista or es_alta_gerencia %}

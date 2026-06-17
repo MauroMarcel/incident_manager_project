@@ -1,3 +1,9 @@
 from django.contrib import admin
+from organization.models import Area
 
-# Register your models here.
+class AreaAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'area_superior')
+    list_display_links = ('nombre',)
+
+
+admin.site.register(Area,AreaAdmin)

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-info text-white">
+            <h4 class="mb-0">Detalles de la Notificación</h4>
+        </div>
+        <div class="card-body">
+            <p><strong>Asunto:</strong> {{ notificacion.asunto }}</p>
+            <p><strong>Descripción:</strong> {{ notificacion.descripcion }}</p>
+            <p><strong>Teléfono:</strong> {{ notificacion.telefono }}</p>
+            <p><strong>Área:</strong> {{ notificacion.area_notificacion }}</p>
+            <p><strong>Estado:</strong> {{ notificacion.estado_notificacion }}</p>
+            <p><strong>Fecha de notificación:</strong> {{ notificacion.fecha_notificacion }}</p>
+            <p><strong>Notificado por el usuario:</strong> {{ notificacion.usuario_notificador }}</p>
+
+            <a href="{% url 'notification-list' %}" class="btn btn-secondary mt-3">
+                Volver al listado
+            </a>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
