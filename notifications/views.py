@@ -4,6 +4,8 @@ from django.views.generic import CreateView, DetailView, ListView
 from references.models import Estado_Notificacion
 from .models import Notificacion
 from .form import NotificacionForm
+from django.views import View
+from django.shortcuts import get_object_or_404, redirect
 
 class NotificationCreateView(CreateView):
     model = Notificacion
@@ -45,3 +47,14 @@ class NotificationListView(ListView):
             # Ve todas
             return Notificacion.objects.all()
     template_name = 'notifications/notification_list.html'
+
+class NotificationRechazarView(View):
+    def post(self, request, pk):
+        notificacion = get_object_or_404(Notificacion, pk=pk)
+        motivo = request.POST.get('motivo_rechazo')
+        # aquí cambias el estado y guardas el motivo
+        estado = Estado_Notificacion.objects.get(code='REC')
+        notificacion.estado_notificacion = estado
+        notificacion.respuesta_supervisor = motivo
+        notificacion.save()
+        return redirect('notification-detail', pk=pk)

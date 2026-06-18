@@ -95,7 +95,7 @@ class Sistema_Operativo(Modelo_Nomenclador):
 class Categoria_Persona(Modelo_Nomenclador):
     class Meta:
         verbose_name = "Categoria_Persona"
-        verbose_name_plural = "Categorias_Personas"
+        verbose_name_plural = "Categorias de Persona"
         ordering = ['name']
 
 class Cargo(Modelo_Nomenclador):
@@ -107,7 +107,7 @@ class Cargo(Modelo_Nomenclador):
 class Estado_Persona(Modelo_Nomenclador):
     class Meta:
         verbose_name = "Estado_Persona"
-        verbose_name_plural = "Estados_Personas"
+        verbose_name_plural = "Estados de Persona"
         ordering = ['name']
 
 # ============================================================

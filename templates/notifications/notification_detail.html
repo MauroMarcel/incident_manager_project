@@ -15,13 +15,42 @@
             <p><strong>Estado:</strong> {{ notificacion.estado_notificacion }}</p>
             <p><strong>Fecha de notificación:</strong> {{ notificacion.fecha_notificacion }}</p>
             <p><strong>Notificado por el usuario:</strong> {{ notificacion.usuario_notificador }}</p>
-
-            <a href="{% url 'notification-list' %}" class="btn btn-secondary mt-3">
+            <div>
+                <a href="{% url 'notification-list' %}" class="btn btn-secondary">
                 Volver al listado
-            </a>
-
+                </a>
+                {% if es_supervisor or es_admin %}
+                    <a href="#" class="btn btn-success">Crear nuevo incidente</a>
+                    <a href="#" class="btn btn-warning">Vincular a incidente existente</a>
+                    {% if notificacion.estado_notificacion.code == 'PEN' %}
+                        <button data-bs-toggle="modal" data-bs-target="#modalRechazo">Rechazar</button>
+                    {% else %}
+                        <p class="text-muted">Esta notificación ya fue procesada.</p>
+                    {% endif %}
+                {% endif %}
+            </div>
         </div>
     </div>
 
 </div>
+<div class="modal fade" id="modalRechazo">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>Rechazar Notificación</h5>
+            </div>
+            <div class="modal-body">
+                <!-- formulario aquí -->
+                <form method="POST" action="{% url 'notification-rechazar' notificacion.pk %}">
+                    {% csrf_token %}
+                    <textarea name="motivo_rechazo" class="form-control" rows="4" placeholder="Escribe el motivo del rechazo..." required></textarea>
+                    <button type="submit" class="btn btn-success mt-3">Guardar notificación de rechazo</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>  
 {% endblock %}
+
+
+

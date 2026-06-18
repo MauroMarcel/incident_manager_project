@@ -25,8 +25,8 @@ class Notificacion(ModeloBase):
         Area,
         on_delete=models.PROTECT, 
         related_name='areas_notificacion',
-        blank=True,
-        null=True
+        blank=False,
+        null=False,
         )
     
     respuesta_supervisor = models.TextField(blank=True, null=True)
