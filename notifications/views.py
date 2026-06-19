@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView
+from incidents.models import Incidente
 from references.models import Estado_Notificacion
 from .models import Notificacion
 from .form import NotificacionForm
@@ -28,7 +29,15 @@ class NotificationCreateView(CreateView):
 
 class NotificationDetailView(DetailView):
     model = Notificacion
-    template_name = 'notifications/notification_detail.html'   
+    template_name = 'notifications/notification_detail.html'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        q = self.request.GET.get('q', '')
+        context['incidentes'] = Incidente.objects.filter(
+            titulo__icontains=q
+        )
+        context['q'] = q
+        return context
 
 class NotificationListView(ListView):
     model = Notificacion
@@ -58,3 +67,26 @@ class NotificationRechazarView(View):
         notificacion.respuesta_supervisor = motivo
         notificacion.save()
         return redirect('notification-detail', pk=pk)
+    
+class NotificationVincularView(View):
+    def post(self, request, pk):
+        notificacion = get_object_or_404(Notificacion, pk=pk)
+        incidente_pk = request.POST.get("incidente_pk")
+
+        incidente = get_object_or_404(Incidente, pk=incidente_pk)
+
+        # Vincular
+        notificacion.incidente_asociado = incidente
+        estado_aceptada = Estado_Notificacion.objects.get(code='ACE')
+        notificacion.estado_notificacion = estado_aceptada
+        notificacion.save()
+        # Advertencia para Supervisor acerca de la coincidencia de las areas
+        if notificacion.area_notificacion != incidente.area_afectada:
+            messages.warning(
+                request,
+                f'Advertencia: el área de la notificación '
+                f'({notificacion.area_notificacion}) no coincide '
+                f'con el área del incidente ({incidente.area_afectada}). '
+                f'Notificación: {notificacion.pk}'
+            )
+        return redirect("notification-detail", pk=notificacion.pk)

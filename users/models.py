@@ -9,14 +9,20 @@ class Persona(ModeloBase):
     identificador_interno = models.CharField(max_length=50, unique=True)
     nombre = models.CharField(max_length=100)
     apellidos = models.CharField(max_length=100)
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True, null=True, blank=True)
     categoria_persona = models.ForeignKey(Categoria_Persona,on_delete=models.SET_NULL,null=True,)
     cargo = models.ForeignKey(Cargo,on_delete=models.SET_NULL,null=True,)
     estado_persona = models.ForeignKey(Estado_Persona,on_delete=models.SET_NULL,null=True,)
     jefe_directo = models.ForeignKey('self',on_delete=models.SET_NULL,null=True,blank=True,related_name='subordinados')
     fecha_ingreso = models.DateTimeField(auto_now_add=True)
     fecha_baja = models.DateField(null=True, blank=True)
-    usuario_django = models.OneToOneField(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name='perfil_persona')
+    usuario_django = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='perfil_persona'
+    )
     area = models.ForeignKey(
     Area,
     on_delete=models.SET_NULL,

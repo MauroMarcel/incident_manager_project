@@ -6,4 +6,5 @@ urlpatterns = [
     path('<uuid:pk>/', views.NotificationDetailView.as_view(), name='notification-detail'),
     path('list/', views.NotificationListView.as_view(), name='notification-list'),
     path('<uuid:pk>/rechazar/', views.NotificationRechazarView.as_view(), name='notification-rechazar'),
+    path('<uuid:pk>/vincular/', views.NotificationVincularView.as_view(), name='notificacion-vincular'),
 ]

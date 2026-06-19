@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endif %}
 <div class="container mt-4">
 
     <div class="card shadow-sm">
@@ -20,12 +28,20 @@
                 Volver al listado
                 </a>
                 {% if es_supervisor or es_admin %}
-                    <a href="#" class="btn btn-success">Crear nuevo incidente</a>
-                    <a href="#" class="btn btn-warning">Vincular a incidente existente</a>
                     {% if notificacion.estado_notificacion.code == 'PEN' %}
-                        <button data-bs-toggle="modal" data-bs-target="#modalRechazo">Rechazar</button>
-                    {% else %}
-                        <p class="text-muted">Esta notificación ya fue procesada.</p>
+                        {% if not notificacion.incidente_asociado %}
+                            <a href="{% url 'incidente-crear' notificacion.pk %}" class="btn btn-success">
+                                Crear nuevo incidente
+                            </a>
+                            <button data-bs-toggle="modal" data-bs-target="#modalVincularIncidente" class="btn btn-warning">
+                                Vincular a incidente existente
+                            </button>
+                        {% else %}
+                            <p class="text-muted">Vinculada al incidente: <strong>{{ notificacion.incidente_asociado.codigo }}</strong></p>
+                        {% endif %}
+                            <button data-bs-toggle="modal" data-bs-target="#modalRechazo">Rechazar</button>
+                        {% else %}
+                            <p class="text-muted">Esta notificación ya fue procesada.</p>
                     {% endif %}
                 {% endif %}
             </div>
@@ -49,8 +65,82 @@
             </div>
         </div>
     </div>
-</div>  
+</div> 
+<!--Modal para Vincular a Incidente ya existente--> 
+<div class="modal fade" id="modalVincularIncidente" data-area-notificacion="{{ object.area_notificacion.pk }}" tabindex="-1" aria-labelledby="modalVincularIncidenteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <!-- Header -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalVincularIncidenteLabel">Vincular notificación a un incidente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body">
+
+                <!-- PARTE 1 — Formulario de búsqueda -->
+                <form method="GET">
+                    <div class="input-group mb-3">
+                        <input type="text" name="q" class="form-control" placeholder="Buscar incidente..." value="{{ q }}">
+                        <button class="btn btn-outline-primary" type="submit">Buscar</button>
+                    </div>
+                </form>
+
+                <!-- PARTE 2 — Resultados -->
+                {% if incidentes %}
+                    <div class="list-group">
+                        {% for incidente in incidentes %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ incidente.codigo }}</strong> — {{ incidente.titulo }}
+                                    <span class="badge bg-secondary">
+                                        {{   incidente.notificaciones_incidente.count }} notificaciones
+                                    </span>
+                                </div>
+
+                                <form method="POST" action="{% url 'notificacion-vincular' notificacion.pk %}" class="form-vincular" data-area-incidente="{{ incidente.area_afectada.pk }}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="incidente_pk" value="{{ incidente.pk }}">
+                                    <button type="submit" class="btn btn-success btn-sm">Seleccionar</button>
+                                </form>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% elif q %}
+                    <p class="text-muted">No se encontraron incidentes para "{{ q }}".</p>
+                {% endif %}
+
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+    
 {% endblock %}
 
 
 
+{% block extra_scripts %}
+    <script>
+    document.querySelectorAll('.form-vincular').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const modal = document.getElementById('modalVincularIncidente');
+            const areaNotificacion = modal.dataset.areaNotificacion;
+            const areaIncidente = this.dataset.areaIncidente;
+            
+            if (areaIncidente !== areaNotificacion) {
+                if (!confirm('⚠️ Las áreas no coinciden. ¿Deseas vincular de todas formas?')) {
+                    e.preventDefault();
+                }
+            }
+        });
+    });
+    </script>
+    {% endblock %}
