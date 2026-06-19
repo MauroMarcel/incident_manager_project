@@ -10,11 +10,15 @@
         <form method="POST" novalidate>
                     {% csrf_token %}
                     {{ form.as_p }}
+                    <div>
+                        <p class="text-muted mt-3"><i>El especialista se puede asignar después desde el listado de incidentes.</i></p>
+                    </div>
                     <button type="submit" class="btn btn-success mt-3">
                         Guardar nuevo Incidente
                     </button>
+        
     </div>
-
+    
 </div>
 
 

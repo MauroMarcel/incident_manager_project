@@ -33,7 +33,7 @@
 
                 <!-- Incidentes — Admin, Supervisor, Especialista, Alta Gerencia -->
                 {% if es_admin or es_supervisor or es_especialista or es_alta_gerencia %}
-                <a href="#">Incidentes</a>
+                <a href="{% url 'incidente-lista' %}">Incidentes</a>
                 {% endif %}
 
                 <!-- Reportes — Admin, Supervisor, Alta Gerencia -->

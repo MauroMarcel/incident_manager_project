@@ -3,16 +3,46 @@ from .models import Incidente
 from users.models import Persona
 from django.contrib.auth.models import Group
 
+
 class IncidenteForm(forms.ModelForm):
     class Meta:
         model = Incidente
-        fields = ['titulo', 'descripcion', 'area_afectada', 'especialista_asignado']
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        especialistas = Group.objects.get(name='Especialista')
-        self.fields['especialista_asignado'].queryset = Persona.objects.filter(
-            usuario_django__groups=especialistas,
-            estado_persona__code='ACT'
-        )
-        self.fields['especialista_asignado'].label = 'Especialista a asignar'
+        fields = ['titulo', 'descripcion', 'area_afectada']
+
+class IncidenteReporteOficialForm(forms.ModelForm):
+    class Meta:
+        model = Incidente
+        fields = [
+            'origen_incidente', 'recursos_afectados', 
+            'contramedidas', 'otra_informacion',
+            'peligrosidad', 'sistema_operativo', 'subcategoria'
+        ]
+
+
+class IncidenteClasificacionInternaForm(forms.ModelForm):
+    class Meta:
+        model = Incidente
+        fields = [
+            'alcance', 'indicador_compromiso', 'vector_ataque',
+            'fuente_deteccion', 'tecnologia', 'tipo_incidente',
+            'impacto_incidente', 'intencionalidad', 'involucrados'
+        ]
+        widgets = {
+            'involucrados': forms.CheckboxSelectMultiple(),
+            'indicador_compromiso': forms.CheckboxSelectMultiple(),
+        }
+
+class IncidenteTemporalidadForm(forms.ModelForm):
+    class Meta:
+        model = Incidente
+        fields = ['fecha_ocurrencia', 'fecha_solucion']
+        widgets = {
+            'fecha_ocurrencia': forms.DateTimeInput(
+                attrs={'type': 'datetime-local'},
+                format='%Y-%m-%dT%H:%M'
+            ),
+            'fecha_solucion': forms.DateTimeInput(
+                attrs={'type': 'datetime-local'},
+                format='%Y-%m-%dT%H:%M'
+            ),
+        }

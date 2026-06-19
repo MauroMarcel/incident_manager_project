@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                Clasificar Incidente — Paso {{ paso }} de {{ total_pasos }}
+            </h4>
+            <!-- Barra de progreso -->
+            <div class="progress mt-2" style="height: 8px;">
+                <div class="progress-bar" style="width: {{ porcentaje }}%">
+
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <!-- Título del paso actual -->
+            {% if paso == '1' %}
+                <h5>Reporte Oficial — Resolución 105/2025</h5>
+            {% elif paso == '2' %}
+                <h5>Clasificación Interna</h5>
+            {% elif paso == '3' %}
+                <h5>Temporalidad</h5>
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+
+                <div class="d-flex gap-2 mt-3">
+                    <!-- Botón Anterior -->
+                    {% if paso != '1' %}
+                        <a href="{% url 'incidente-wizard' incidente.pk paso_anterior %}" class="btn btn-secondary">
+                            Anterior
+                        </a>
+                        {%else%}
+                            <a href="{% url 'incidente-lista' %}" class="btn btn-secondary">
+                                Volver al listado
+                            </a>
+                    {% endif %}
+
+                    <!-- Botón Siguiente o Guardar -->
+                    {% if paso == total_pasos|stringformat:'s' %}
+                        <button type="submit" class="btn btn-success">
+                            Guardar
+                        </button>
+                    {% else %}
+                        <button type="submit" class="btn btn-primary">
+                            Siguiente
+                        </button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

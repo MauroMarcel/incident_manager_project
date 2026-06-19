@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h4>Asignar Especialista — {{ incidente.codigo }}</h4>
+    <div class="row mt-3">
+        {% for especialista in especialistas %}
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5>{{ especialista.nombre }} {{ especialista.apellidos }}</h5>
+                    <p>Exp. en tipo: {{ especialista.exp_tipo }}</p>
+                    <p>Casos activos: {{ especialista.casos_activos }}</p>
+                    <p>Total resueltos: {{ especialista.total_resueltos }}</p>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="especialista_pk" value="{{ especialista.pk }}">
+                        <button type="submit" class="btn btn-success btn-sm">
+                            Asignar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+            <p>No hay especialistas disponibles.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

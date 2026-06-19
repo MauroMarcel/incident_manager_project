@@ -7,6 +7,8 @@ from .models import Notificacion
 from .form import NotificacionForm
 from django.views import View
 from django.shortcuts import get_object_or_404, redirect
+from django.core.mail import send_mail
+from django.conf import settings
 
 class NotificationCreateView(CreateView):
     model = Notificacion
@@ -23,7 +25,13 @@ class NotificationCreateView(CreateView):
         form.instance.estado_notificacion = estado_inicial
         # Guardar el usuario notificador (el usuario que crea la notificación)
         form.instance.usuario_notificador = self.request.user
-        messages.success(self.request, "Notificación creada correctamente")
+        send_mail(
+            subject='Notificación recibida — SGIC',
+            message=f'Su notificación sobre "{Notificacion.asunto}" fue registrada correctamente.',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[self.request.user.email],
+            fail_silently=True,
+        )
         return super().form_valid(form)
 
 
@@ -65,6 +73,13 @@ class NotificationRechazarView(View):
         estado = Estado_Notificacion.objects.get(code='REC')
         notificacion.estado_notificacion = estado
         notificacion.respuesta_supervisor = motivo
+        send_mail(
+            subject='Notificación rechazada — SGIC',
+            message=f'Su notificación fue rechazada.\nMotivo: {motivo}',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[notificacion.usuario_notificador.email],
+            fail_silently=True,
+        )
         notificacion.save()
         return redirect('notification-detail', pk=pk)
     
@@ -89,4 +104,11 @@ class NotificationVincularView(View):
                 f'con el área del incidente ({incidente.area_afectada}). '
                 f'Notificación: {notificacion.pk}'
             )
+        send_mail(
+            subject='Notificación recibida — SGIC',
+            message=f'Su notificación sobre "{notificacion.asunto}" fue registrada correctamente.',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[self.request.user.email],
+            fail_silently=True,
+        )
         return redirect("notification-detail", pk=notificacion.pk)
