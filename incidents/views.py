@@ -10,6 +10,9 @@ from django.db.models import Count, Q
 from django.contrib.auth.models import Group
 from users.models import Persona
 from django.utils import timezone
+from django.core.mail import send_mail
+from django.conf import settings
+
 
 def get_especialistas_ordenados(incidente):
     grupo_especialista = Group.objects.get(name='Especialista')
@@ -45,6 +48,7 @@ def get_especialistas_ordenados(incidente):
             filter=Q(especialistas_incidente__estado_incidente__code='RES')
         )
     ).order_by('-exp_tipo', 'casos_activos', '-total_resueltos')
+
 class IncidenteAsignarEspecialistaView(View):
     def get(self, request, pk):
         incidente = get_object_or_404(Incidente, pk=pk)
@@ -86,6 +90,13 @@ class IncidenteCreateView(CreateView):
         estado_aceptada = Estado_Notificacion.objects.get(code='ACE')
         notificacion.estado_notificacion = estado_aceptada
         notificacion.save()
+        send_mail(
+            subject='Notificación aceptada — SGIC',
+            message=f'Su notificación sobre "{notificacion.asunto}" está siendo investigada.',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[notificacion.usuario_notificador.email],
+            fail_silently=False,
+        )
         return response
 
 class IncidenteWizardView(View):

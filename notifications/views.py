@@ -17,7 +17,6 @@ class NotificationCreateView(CreateView):
     # Muestra los detalles de la notificacion despues de crearla
     def get_success_url(self):
         return reverse_lazy('notification-detail', kwargs={'pk': self.object.pk})
-    
     # Asignar el estado inicial y el usuario notificador antes de guardar
     def form_valid(self, form):
         # Asignar estado inicial a la notificacion
@@ -25,14 +24,15 @@ class NotificationCreateView(CreateView):
         form.instance.estado_notificacion = estado_inicial
         # Guardar el usuario notificador (el usuario que crea la notificación)
         form.instance.usuario_notificador = self.request.user
+        response = super().form_valid(form)
         send_mail(
             subject='Notificación recibida — SGIC',
-            message=f'Su notificación sobre "{Notificacion.asunto}" fue registrada correctamente.',
+            message=f'Su notificación sobre "{self.object.asunto}" fue registrada correctamente.',
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[self.request.user.email],
-            fail_silently=True,
+            fail_silently=False,
         )
-        return super().form_valid(form)
+        return response
 
 
 class NotificationDetailView(DetailView):
@@ -75,10 +75,10 @@ class NotificationRechazarView(View):
         notificacion.respuesta_supervisor = motivo
         send_mail(
             subject='Notificación rechazada — SGIC',
-            message=f'Su notificación fue rechazada.\nMotivo: {motivo}',
-            from_email=settings.DEFAULT_FROM_EMAIL,
+            message=f'Su notificación sobre "{notificacion.asunto}" fue rechazada.\nMotivo: {motivo}',
             recipient_list=[notificacion.usuario_notificador.email],
-            fail_silently=True,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            fail_silently=False,
         )
         notificacion.save()
         return redirect('notification-detail', pk=pk)
@@ -87,9 +87,7 @@ class NotificationVincularView(View):
     def post(self, request, pk):
         notificacion = get_object_or_404(Notificacion, pk=pk)
         incidente_pk = request.POST.get("incidente_pk")
-
         incidente = get_object_or_404(Incidente, pk=incidente_pk)
-
         # Vincular
         notificacion.incidente_asociado = incidente
         estado_aceptada = Estado_Notificacion.objects.get(code='ACE')
@@ -105,10 +103,10 @@ class NotificationVincularView(View):
                 f'Notificación: {notificacion.pk}'
             )
         send_mail(
-            subject='Notificación recibida — SGIC',
-            message=f'Su notificación sobre "{notificacion.asunto}" fue registrada correctamente.',
+            subject='Notificación aceptada — SGIC',
+            message=f'Su notificación sobre "{notificacion.asunto}" está siendo investigada.',
+            recipient_list=[notificacion.usuario_notificador.email],
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[self.request.user.email],
-            fail_silently=True,
+            fail_silently=False,
         )
         return redirect("notification-detail", pk=notificacion.pk)
