@@ -7,11 +7,14 @@
         {% for notificacion in object_list %}
             <div class="notification">
                 <h3>{{ notificacion.asunto }}</h3>
-                <p>{{ notificacion.descripcion }}</p>
-                <p>{{ notificacion.estado_notificacion }}</p>
-                <p>{{ notificacion.usuario_notificador }}</p>
-                <span class="timestamp">{{ notificacion.fecha_notificacion }}</span>
-                <a href="{% url 'notification-detail' notificacion.pk %}" class="btn btn-primary mt-2">Ver Detalles</a>
+                <p><strong>Descripcion: </strong>{{ notificacion.descripcion }}</p>
+                <p><strong>Estado de la Notificacion: </strong>{{ notificacion.estado_notificacion }}</p>
+                <p><strong>Notificado por: </strong>{{ notificacion.usuario_notificador }}</p>
+                <span class="timestamp"><strong>Fecha de reporte: </strong>{{ notificacion.fecha_notificacion }}</span>
+                <div class="d-flex gap-2 mt-2">
+                    <a href="{% url 'notification-detail' notificacion.pk %}" class="btn btn-primary mt-2">Ver Detalles</a>
+                </div>
+                
             </div>
         {% empty %}
             <p>No notifications available.</p>

@@ -25,7 +25,7 @@
             <p><strong>Notificado por el usuario:</strong> {{ notificacion.usuario_notificador }}</p>
             <div>
                 <a href="{% url 'notification-list' %}" class="btn btn-secondary">
-                Volver al listado
+                    Volver al listado
                 </a>
                 {% if es_supervisor or es_admin %}
                     {% if notificacion.estado_notificacion.code == 'PEN' %}

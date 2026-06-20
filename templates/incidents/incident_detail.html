@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <h4>{{ incidente.codigo }} — {{ incidente.titulo }}</h4>
+        </div>
+
+        <div class="card-body">
+
+            <!-- ========================= -->
+            <!--     INFORMACIÓN GENERAL   -->
+            <!-- ========================= -->
+            <h5>Información General</h5>
+
+            <p><strong>Área afectada:</strong> {{ incidente.area_afectada }}</p>
+            <p><strong>Reportado por:</strong> {{ incidente.supervisor }}</p>
+            <p><strong>Asignado a:</strong> 
+            {% if incidente.especialista_asignado %}
+                {{ incidente.especialista_asignado }}
+            {% elif incidente.estado_incidente.code == 'RES' or incidente.estado_incidente.code == 'REC' %}
+                Investigado por el supervisor
+            {% else %}
+                Sin asignar
+            {% endif %}
+            </p>
+            <p><strong>Estado:</strong> {{ incidente.estado_incidente }}</p>
+            <p><strong>Prioridad:</strong> {{ incidente.prioridad }}</p>
+
+            <hr>
+
+            <!-- ========================= -->
+            <!--   REPORTE OFICIAL 105/25  -->
+            <!-- ========================= -->
+            <h5>Reporte Oficial — Resolución 105/2025</h5>
+
+            <p><strong>Origen del incidente:</strong></p>
+            <p>{{ incidente.origen_incidente|linebreaks }}</p>
+
+            <p><strong>Descripción detallada:</strong></p>
+            <p>{{ incidente.descripcion|linebreaks }}</p>
+
+            <p><strong>Recursos afectados:</strong></p>
+            <p>{{ incidente.recursos_afectados|linebreaks }}</p>
+
+            <p><strong>Acciones / Contramedidas aplicadas:</strong></p>
+            <p>{{ incidente.contramedidas|linebreaks }}</p>
+
+            <p><strong>Evidencias:</strong></p>
+            <p>{{ incidente.evidencias|linebreaks }}</p>
+
+            <p><strong>Otra información relevante:</strong></p>
+            <p>{{ incidente.otra_informacion|linebreaks }}</p>
+
+            <hr>
+
+            <!-- ========================= -->
+            <!--   CLASIFICACIÓN INTERNA   -->
+            <!-- ========================= -->
+            <h5>Clasificación Interna</h5>
+
+            <p><strong>Tipo de incidente:</strong> {{ incidente.tipo_incidente }}</p>
+            <p><strong>Alcance:</strong> {{ incidente.alcance }}</p>
+            <p><strong>Vector de ataque:</strong> {{ incidente.vector_ataque }}</p>
+            <p><strong>Fuente de detección:</strong> {{ incidente.fuente_deteccion }}</p>
+            <p><strong>Tecnología involucrada:</strong> {{ incidente.tecnologia }}</p>
+            <p><strong>Sistema operativo:</strong> {{ incidente.sistema_operativo }}</p>
+            <p><strong>Involucrados:</strong></p>
+            <ul>
+            {% for persona in incidente.involucrados.all %}
+                <li>{{ persona }}</li>
+            {% empty %}
+                <li class="text-muted">Ninguno</li>
+            {% endfor %}
+            </ul>
+
+            <p><strong>Indicadores de Compromiso:</strong></p>
+            <ul>
+            {% for ioc in incidente.indicador_compromiso.all %}
+                <li>{{ ioc.tipo_ioc }} — {{ ioc.valor }}</li>
+            {% empty %}
+                <li class="text-muted">Ninguno</li>
+            {% endfor %}
+            </ul>
+            <hr>
+
+
+            <!-- ========================= -->
+            <!--        TEMPORALIDAD       -->
+            <!-- ========================= -->
+            <h5>Temporalidad</h5>
+
+            <p><strong>Fecha de detección:</strong> {{ incidente.fecha_ocurrencia }}</p>
+            <p><strong>Fecha de reporte:</strong> {{ incidente.fecha_reportado }}</p>
+            <p><strong>Fecha de cierre:</strong> {{ incidente.fecha_solucion|default:"—" }}</p>
+
+            <hr>
+
+            <!-- ========================= -->
+            <!--  NOTIFICACIONES ASOCIADAS -->
+            <!-- ========================= -->
+            <h5>Notificaciones Asociadas</h5>
+
+            {% if incidente.notificaciones_incidente.all %}
+                <ul>
+                    {% for notificacion in incidente.notificaciones_incidente.all %}
+                        <li>
+                            <a href="{% url 'notification-detail' notificacion.pk %}">
+                                {{ notificacion.asunto }} — {{ notificacion.usuario_notificador }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">No existen notificaciones asociadas.</p>
+            {% endif %}
+
+            <!-- ========================= -->
+            <!--     BOTONES DE ACCIÓN     -->
+            <!-- ========================= -->
+            <div class="d-flex gap-2 mt-3">
+                <!--Boton para volver al listado-->
+                <button onclick="history.back()" class="btn btn-secondary" style="padding: 0.4rem 0.8rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M15 8a.5.5 0 0 1-.5.5H3.707l4.147 4.146a.5.5 0 0 1-.708.708l-5-5a.5.5 0 0 1 0-.708l5-5a.5.5 0 1 1 .708.708L3.707 7.5H14.5A.5.5 0 0 1 15 8z"/>
+                    </svg>
+                </button>
+
+                {% if incidente.estado_incidente.code != 'REC' and incidente.estado_incidente.code != 'RES' %}
+                    {% if es_admin or es_supervisor or es_especialista %}
+                        <a href="{% url 'incidente-wizard' incidente.pk '1' %}" 
+                        class="btn btn-primary">Clasificar</a>
+                    {% endif %}
+
+                    {% if es_admin or es_supervisor %}
+                        {% if not incidente.especialista_asignado %}
+                            <a href="{% url 'incidente-asignar' incidente.pk %}" 
+                            class="btn btn-warning">Asignar Especialista</a>
+                        {% endif %}
+                    {% endif %}
+                    {% if es_admin or es_supervisor or es_especialista %}
+                        <button data-bs-toggle="modal" data-bs-target="#modalDeclinar" class="btn btn-danger">
+                            Declinar
+                        </button>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+<!--Modal para Declinar Incidente-->
+    <div class="modal fade" id="modalDeclinar">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5>Declinar Incidente</h5>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="{% url 'incidente-declinar' incidente.pk %}">
+                        {% csrf_token %}
+                        <textarea name="motivo_rechazo" class="form-control" rows="4" required>Este incidente ha sido rechazado. </textarea>
+                        <button type="submit" class="btn btn-danger mt-3">Confirmar rechazo</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

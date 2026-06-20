@@ -6,4 +6,6 @@ urlpatterns = [
     path('<uuid:pk>/editar/<str:paso>/', views.IncidenteWizardView.as_view(), name='incidente-wizard'),
     path('', views.IncidenteListView.as_view(), name='incidente-lista'),
     path('<uuid:pk>/asignar/', views.IncidenteAsignarEspecialistaView.as_view(), name='incidente-asignar'),
+    path('<uuid:pk>/', views.IncidenteDetailView.as_view(), name='incidente-detalle'),
+    path('<uuid:pk>/declinar/', views.IncidenteDeclinarView.as_view(), name='incidente-declinar'),
 ]

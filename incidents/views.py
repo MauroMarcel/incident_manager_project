@@ -12,6 +12,7 @@ from users.models import Persona
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
+from django.views.generic import DetailView
 
 
 def get_especialistas_ordenados(incidente):
@@ -156,3 +157,44 @@ class IncidenteListView(ListView):
         if user.groups.filter(name='Administrador').exists():
             # Todos
             return Incidente.objects.all()
+
+class IncidenteDeclinarView(View):
+    def post(self, request, pk):
+        incidente = get_object_or_404(Incidente, pk=pk)
+        motivo = request.POST.get('motivo_rechazo')
+        # 1. Cambiar estado
+        incidente.estado_incidente = Estado_Incidente.objects.get(code='REC')
+
+        # 2. Guardar motivo en otra_informacion
+        texto = f"[{timezone.now().strftime('%Y-%m-%d %H:%M')}] Rechazado por {request.user}: {motivo}\n"
+        incidente.otra_informacion = (incidente.otra_informacion or "") + texto
+        incidente.save()
+
+        # 3. Enviar correo al supervisor (si existe)
+        if incidente.supervisor and incidente.supervisor.usuario_django:
+            recipient_list=[incidente.supervisor.usuario_django.email]
+            send_mail(
+                subject=f"Incidente {incidente.codigo} rechazado",
+                message=f"El incidente {incidente.codigo} ha sido rechazado.\nMotivo: {motivo}",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[incidente.supervisor.email],
+            )
+        # 4. Enviar correo a usuarios de notificaciones asociadas
+        if hasattr(incidente, "notificaciones"):
+            correos = [
+                n.usuario.email
+                for n in incidente.notificaciones_incidente.all()
+                if n.usuario and n.usuario_notificador.email
+            ]
+            if correos:
+                send_mail(
+                    subject=f"Actualización del incidente {incidente.codigo}",
+                    message=f"El incidente ha sido rechazado.\nMotivo: {motivo}",
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=correos,
+                )
+        return redirect('incidente-detalle', pk=pk)
+
+class IncidenteDetailView(DetailView):
+    model = Incidente
+    template_name = 'incidents/incident_detail.html'

@@ -110,3 +110,4 @@ class NotificationVincularView(View):
             fail_silently=False,
         )
         return redirect("notification-detail", pk=notificacion.pk)
+

@@ -6,22 +6,16 @@
 
         {% for incidente in object_list %}
             <div class="notification">
-                <h3>{{ incidente.codigo }}</h3>
-                <p>{{ incidente.titulo }}</p>
-                <p>{{ incidente.estado_incidente }}</p>
-                <p>{{ incidente.area_afectada }}</p>
-                <span class="timestamp">{{ incidente.fecha_asignacion }}</span>
+                <h3> {{ incidente.titulo }}</h3>
+                <p><strong>Código: </strong>{{ incidente.codigo }}</p>
+                <p><strong>Estado: </strong>{{ incidente.estado_incidente }}</p>
+                <p><strong>Área afectada: </strong>{{ incidente.area_afectada }}</p>
+                <p><strong>Especialista: </strong> {{ incidente.especialista_asignado|default:"Sin asignar" }}</p>
+                <span class="timestamp"><strong>Fecha de reporte: </strong>{{ incidente.fecha_reportado }}</span>
                 <div class="d-flex gap-2 mt-2">
-                    <a href="{% url 'incidente-wizard' incidente.pk '1' %}" class="btn btn-primary btn-sm"> 
-                        Clasificar
+                    <a href="{% url 'incidente-detalle' incidente.pk %}" class="btn btn-info btn-sm">
+                        Ver Detalles
                     </a>
-                    {% if es_supervisor or es_admin %}
-                        {% if not incidente.especialista_asignado %}
-                            <a href="{% url 'incidente-asignar' incidente.pk %}" class="btn btn-warning btn-sm">
-                                Asignar Especialista
-                            </a>
-                        {% endif %}
-                    {% endif %}
                 </div>
             </div>
         {% empty %}
