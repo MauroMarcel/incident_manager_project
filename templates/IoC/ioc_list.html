@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Indicadores de Compromiso (IoCs)</h2>
+
+    <div class="notifications-container">
+
+        {% for ioc in object_list %}
+            <div class="notification">
+                <h3>{{ ioc.tipo_ioc }}</h3>
+
+                <p><strong>Valor:</strong> {{ ioc.valor }}</p>
+
+                {% if ioc.descripcion %}
+                    <p><strong>Descripción:</strong> {{ ioc.descripcion }}</p>
+                {% endif %}
+
+                <span class="timestamp">
+                    <strong>Fecha de registro:</strong> {{ ioc.created }}
+                </span>
+
+                <div class="d-flex gap-2 mt-2">
+                    <a href="{% url 'ioc-detalle' ioc.pk %}" class="btn btn-primary mt-2">
+                        Ver Detalles
+                    </a>
+                </div>
+            </div>
+
+        {% empty %}
+            <p>No hay IoCs registrados.</p>
+        {% endfor %}
+
+    </div>
+{% endblock %}

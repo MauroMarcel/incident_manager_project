@@ -40,10 +40,9 @@
                 {% if es_admin or es_supervisor or es_alta_gerencia %}
                 <a href="#">Reportes</a>
                 {% endif %}
-
-                <!-- Nomencladores — solo Admin -->
-                {% if es_admin %}
-                <a href="#">Nomencladores</a>
+                <!--IoC — Admin, Supervisor, Especialista -->
+                {% if es_admin or es_supervisor or es_especialista %}
+                <a href="{% url 'ioc-lista' %}">Indicadores de Compromiso</a>
                 {% endif %}
                 <!-- Usuarios — solo Admin -->
                 {% if es_admin %}

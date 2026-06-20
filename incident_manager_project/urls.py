@@ -7,4 +7,5 @@ urlpatterns = [
     path('', include('base.urls')),
     path('notifications/', include('notifications.urls')),
     path('incidentes/', include('incidents.urls')),
+    path('indicadores/', include('IoC.urls')),
 ]

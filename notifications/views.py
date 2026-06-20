@@ -34,7 +34,6 @@ class NotificationCreateView(CreateView):
         )
         return response
 
-
 class NotificationDetailView(DetailView):
     model = Notificacion
     template_name = 'notifications/notification_detail.html'

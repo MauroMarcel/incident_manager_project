@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-
 {% block content %}
 <div class="container mt-4">
-<!--================================
-    MENSAJES DE ÉXITO / ERROR
+
+    <!--================================
+        MENSAJES DE ÉXITO / ERROR
     ================================-->
     {% if messages %}
         {% for message in messages %}
@@ -17,19 +17,21 @@
 
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Crear Notificación</h4>
+            <h4 class="mb-0">Registrar Indicador de Compromiso (IoC)</h4>
         </div>
 
         <div class="card-body">
+
             <!--================================
-                FORMULARIO (compatible con CRISPYFORMS)
+                FORMULARIO (compatible con CRISPY)
                 + VALIDACIONES VISUALES
-                ================================-->
+            ================================-->
             <form method="POST" novalidate>
                 {% csrf_token %}
                 {{ form.as_p }}
+
                 <button type="submit" class="btn btn-success mt-3">
-                    Guardar Notificación
+                    Guardar IoC
                 </button>
             </form>
 
