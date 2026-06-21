@@ -1,115 +1,34 @@
 from django import forms
-from .models import Persona, Categoria_Persona, Cargo, Estado_Persona
-
-
-class Categoria_PersonaForm(forms.ModelForm):
-    active = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={
-        'class': 'form-check-input'
-    }))
-    
-    class Meta:
-        model = Categoria_Persona
-        fields = ['code', 'name', 'active']
-        widgets = {
-            'code': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Código único'
-            }),
-            'name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Nombre de la categoría'
-            }),
-        }
-
-
-class CargoForm(forms.ModelForm):
-    active = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={
-        'class': 'form-check-input'
-    }))
-    
-    class Meta:
-        model = Cargo
-        fields = ['code', 'name', 'active']
-        widgets = {
-            'code': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Código único'
-            }),
-            'name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Nombre del cargo'
-            }),
-        }
-
-
-class Estado_PersonaForm(forms.ModelForm):
-    active = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={
-        'class': 'form-check-input'
-    }))
-    
-    class Meta:
-        model = Estado_Persona
-        fields = ['code', 'name', 'active']
-        widgets = {
-            'code': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Código único'
-            }),
-            'name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Nombre del estado'
-            }),
-        }
-
-
-
-
+from django.contrib.auth.models import User, Group
+from .models import Persona
 
 class PersonaForm(forms.ModelForm):
-    active = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={
-        'class': 'form-check-input'
-    }))
-    
+    es_usuario = forms.BooleanField(required=False, label='¿Registrar como usuario del sistema?',initial=False)
+    password1 = forms.CharField(widget=forms.PasswordInput(attrs={'autocomplete': 'new-password'}), required=False, label='Contraseña')
+    password2 = forms.CharField(widget=forms.PasswordInput(attrs={'autocomplete': 'new-password'}), required=False, label='Confirmar contraseña')
+    rol = forms.ModelChoiceField(queryset=Group.objects.all(), required=False, label='Rol')
+
     class Meta:
         model = Persona
         fields = [
-            'identificador_interno', 'nombre', 'apellidos', 'email', 'categoria_persona', 'cargo', 'estado_persona', 'jefe_directo', 'fecha_baja',
-            'usuario_django', 'active'
+            'identificador_interno', 'nombre', 'apellidos', 
+            'email', 'area', 'cargo', 'categoria_persona',
+            'estado_persona', 'jefe_directo'
         ]
-        widgets = {
-            'identificador_interno': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Identificador único'
-            }),
-            'nombre': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Nombre'
-            }),
-            'apellidos': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Apellidos'
-            }),
-            'email': forms.EmailInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'correo@ejemplo.com'
-            }),
-            'categoria_persona': forms.Select(attrs={
-                'class': 'form-select'
-            }),
-            'cargo': forms.Select(attrs={
-                'class': 'form-select'
-            }),
-            'estado_persona': forms.Select(attrs={
-                'class': 'form-select'
-            }),
-            'jefe_directo': forms.Select(attrs={
-                'class': 'form-select'
-            }),
-            'fecha_baja': forms.DateInput(attrs={
-                'class': 'form-control',
-                'type': 'date'
-            }),
-            'usuario_django': forms.Select(attrs={
-                'class': 'form-select'
-            }),
-        }
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        es_usuario = cleaned_data.get('es_usuario')
+        password1 = cleaned_data.get('password1')
+        password2 = cleaned_data.get('password2')
+        rol = cleaned_data.get('rol')
+        
+        if es_usuario:
+            if not password1:
+                self.add_error('password1', 'La contraseña es obligatoria.')
+            if password1 != password2:
+                self.add_error('password2', 'Las contraseñas no coinciden.')
+            if not rol:
+                self.add_error('rol', 'Debe asignar un rol al usuario.')
+        
+        return cleaned_data

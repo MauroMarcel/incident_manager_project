@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Personas</h2>
+
+    <div class="personas-container">
+        <div class="mb-3">
+            <a href="{% url 'persona-crear' %}" class="btn btn-primary">
+                Nueva Persona
+            </a>
+        </div>
+        {% for persona in object_list %}
+            <div class="persona-card">
+                <h3>{{ persona.nombre }} {{ persona.apellidos }}</h3>
+
+                <p><strong>Identificador interno:</strong> {{ persona.identificador_interno }}</p>
+
+                {% if persona.email %}
+                    <p><strong>Email:</strong> {{ persona.email }}</p>
+                {% endif %}
+
+                {% if persona.categoria_persona %}
+                    <p><strong>Categoría:</strong> {{ persona.categoria_persona }}</p>
+                {% endif %}
+
+                {% if persona.cargo %}
+                    <p><strong>Cargo:</strong> {{ persona.cargo }}</p>
+                {% endif %}
+
+                {% if persona.area %}
+                    <p><strong>Área:</strong> {{ persona.area }}</p>
+                {% endif %}
+
+                {% if persona.estado_persona %}
+                    <p><strong>Estado:</strong> {{ persona.estado_persona }}</p>
+                {% endif %}
+
+                {% if persona.jefe_directo %}
+                    <p><strong>Jefe directo:</strong> {{ persona.jefe_directo }}</p>
+                {% endif %}
+
+                <span class="timestamp">
+                    <strong>Fecha de ingreso:</strong> {{ persona.fecha_ingreso }}
+                    {% if persona.fecha_baja %}
+                        &nbsp;|&nbsp;
+                        <strong>Fecha de baja:</strong> {{ persona.fecha_baja }}
+                    {% endif %}
+                </span>
+
+                <div class="d-flex gap-2 mt-2">
+                    <a href="{% url 'persona-detalle' persona.pk %}" class="btn btn-primary mt-2">
+                        Ver detalles
+                    </a>
+                </div>
+            </div>
+
+        {% empty %}
+            <p>No hay personas registradas.</p>
+        {% endfor %}
+
+    </div>
+{% endblock %}

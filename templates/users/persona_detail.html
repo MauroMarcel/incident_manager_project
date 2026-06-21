@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4>{{ persona.nombre }} {{ persona.apellidos }}</h4>
+        </div>
+        <div class="card-body">
+            <p><strong>Identificador:</strong> {{ persona.identificador_interno }}</p>
+            <p><strong>Email:</strong> {{ persona.email|default:"—" }}</p>
+            <p><strong>Área:</strong> {{ persona.area|default:"—" }}</p>
+            <p><strong>Cargo:</strong> {{ persona.cargo|default:"—" }}</p>
+            <p><strong>Categoría:</strong> {{ persona.categoria_persona|default:"—" }}</p>
+            <p><strong>Estado:</strong> {{ persona.estado_persona|default:"—" }}</p>
+            <p><strong>Jefe directo:</strong> {{ persona.jefe_directo|default:"—" }}</p>
+            <p><strong>Usuario del sistema:</strong> 
+                {% if persona.usuario_django %}
+                    Sí — El usuario <strong>{{ persona.usuario_django.username }}</strong> está registrado 
+                {% else %}
+                    No
+                {% endif %}
+            </p>
+            <div class="d-flex gap-2 mt-3">
+                <a href="{% url 'persona-lista' %}" class="btn btn-secondary">
+                    Volver al listado
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
