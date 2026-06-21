@@ -1,24 +1,24 @@
-from notifications.models import Notificacion
-from .models import Incidente
-from django.views.generic import CreateView
 from django.shortcuts import get_object_or_404, redirect, render
-from references.models import Estado_Incidente, Estado_Notificacion
+from django.urls import reverse_lazy
+from django.views.generic import CreateView, DetailView, ListView
 from django.views import View
-from .forms import IncidenteForm, IncidenteReporteOficialForm, IncidenteClasificacionInternaForm, IncidenteTemporalidadForm
-from django.views.generic import ListView
-from django.db.models import Count, Q
-from django.contrib.auth.models import Group
-from users.models import Persona
-from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
-from django.views.generic import DetailView
+from django.utils import timezone
+from django.db.models import Count, Q
+from django.contrib.auth.models import Group
+
+from base.mixins import RolRequeridoMixin
+from notifications.models import Notificacion
+from references.models import Estado_Incidente, Estado_Notificacion
+from users.models import Persona
+from .models import Incidente
+from .forms import IncidenteForm, IncidenteReporteOficialForm, IncidenteClasificacionInternaForm, IncidenteTemporalidadForm
 
 
 def get_especialistas_ordenados(incidente):
     grupo_especialista = Group.objects.get(name='Especialista')
     
-    # Determinar el filtro de experiencia
     if incidente.tipo_incidente:
         filtro_exp = Q(
             especialistas_incidente__tipo_incidente=incidente.tipo_incidente,
@@ -50,43 +50,44 @@ def get_especialistas_ordenados(incidente):
         )
     ).order_by('-exp_tipo', 'casos_activos', '-total_resueltos')
 
-class IncidenteAsignarEspecialistaView(View):
-    def get(self, request, pk):
-        incidente = get_object_or_404(Incidente, pk=pk)
-        especialistas = get_especialistas_ordenados(incidente)
-        return render(request, 'incidents/asignar_especialista.html', {
-            'incidente': incidente,
-            'especialistas': especialistas,
-        })
-    
-    def post(self, request, pk):
-        incidente = get_object_or_404(Incidente, pk=pk)
-        especialista_pk = request.POST.get('especialista_pk')
-        especialista = get_object_or_404(Persona, pk=especialista_pk)
-        incidente.especialista_asignado = especialista
-        # cambiar estado a ASI
-        incidente.estado_incidente = Estado_Incidente.objects.get(code='ASI')
-        incidente.fecha_asignacion = timezone.now()
-        incidente.save()
-        return redirect('incidente-lista')
 
-class IncidenteCreateView(CreateView):
+class IncidenteListView(RolRequeridoMixin, ListView):
+    roles_permitidos = ['Especialista', 'Supervisor', 'Administrador', 'Alta Gerencia']
+    model = Incidente
+    template_name = 'incidents/incident_list.html'
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.groups.filter(name='Especialista').exists():
+            return Incidente.objects.filter(
+                especialista_asignado=user.perfil_persona
+            ).exclude(estado_incidente__code='REC')
+        if user.groups.filter(name='Supervisor').exists():
+            return Incidente.objects.all()
+        if user.groups.filter(name='Administrador').exists():
+            return Incidente.objects.all()
+
+
+class IncidenteCreateView(RolRequeridoMixin, CreateView):
+    roles_permitidos = ['Supervisor', 'Administrador']
     model = Incidente
     template_name = 'incidents/incident_form.html'
     form_class = IncidenteForm
-    success_url = '#'
+    success_url = '/'
+
     def get_initial(self):
         notificacion = get_object_or_404(Notificacion, pk=self.kwargs['notificacion_pk'])
         return {
-        'descripcion': notificacion.descripcion,
-        'area_afectada': notificacion.area_notificacion,
-    }
+            'descripcion': notificacion.descripcion,
+            'area_afectada': notificacion.area_notificacion,
+        }
+
     def form_valid(self, form):
         notificacion = get_object_or_404(Notificacion, pk=self.kwargs['notificacion_pk'])
         form.instance.supervisor = self.request.user.perfil_persona
         form.instance.estado_incidente = Estado_Incidente.objects.get(code='REP')
         form.instance.fecha_reportado = notificacion.fecha_notificacion
-        response = super().form_valid(form)  
+        response = super().form_valid(form)
         notificacion.incidente_asociado = self.object
         estado_aceptada = Estado_Notificacion.objects.get(code='ACE')
         notificacion.estado_notificacion = estado_aceptada
@@ -100,14 +101,22 @@ class IncidenteCreateView(CreateView):
         )
         return response
 
-class IncidenteWizardView(View):
-    
+
+class IncidenteDetailView(RolRequeridoMixin, DetailView):
+    roles_permitidos = ['Especialista', 'Supervisor', 'Administrador', 'Alta Gerencia']
+    model = Incidente
+    template_name = 'incidents/incident_detail.html'
+
+
+class IncidenteWizardView(RolRequeridoMixin, View):
+    roles_permitidos = ['Especialista', 'Supervisor', 'Administrador']
+
     PASOS = {
         '1': IncidenteReporteOficialForm,
         '2': IncidenteClasificacionInternaForm,
         '3': IncidenteTemporalidadForm,
     }
-    
+
     def get(self, request, pk, paso='1'):
         incidente = get_object_or_404(Incidente, pk=pk)
         FormClass = self.PASOS[paso]
@@ -120,19 +129,19 @@ class IncidenteWizardView(View):
             'total_pasos': len(self.PASOS),
             'porcentaje': int(paso) * 100 // len(self.PASOS)
         })
-    
+
     def post(self, request, pk, paso='1'):
         incidente = get_object_or_404(Incidente, pk=pk)
         FormClass = self.PASOS[paso]
         form = FormClass(request.POST, instance=incidente)
-        
+
         if form.is_valid():
             form.save()
             siguiente = str(int(paso) + 1)
             if siguiente in self.PASOS:
                 return redirect('incidente-wizard', pk=pk, paso=siguiente)
-            return redirect('incidente-lista')
-        
+            return redirect('incidente-detalle', pk=pk)
+
         return render(request, 'incidents/wizard.html', {
             'form': form,
             'paso': paso,
@@ -142,59 +151,58 @@ class IncidenteWizardView(View):
             'porcentaje': int(paso) * 100 // len(self.PASOS)
         })
 
-class IncidenteListView(ListView):
-    model = Incidente
-    template_name = 'incidents/incident_list.html'
-    
-    def get_queryset(self):
-        user = self.request.user
-        if user.groups.filter(name='Especialista').exists():
-            # Solo los suyos y activos
-            return Incidente.objects.filter(especialista_asignado=self.request.user.perfil_persona).exclude(estado_incidente__code='REC')
-        if user.groups.filter(name='Supervisor').exists():
-            # Todos
-            return Incidente.objects.all()
-        if user.groups.filter(name='Administrador').exists():
-            # Todos
-            return Incidente.objects.all()
 
-class IncidenteDeclinarView(View):
+class IncidenteAsignarEspecialistaView(RolRequeridoMixin, View):
+    roles_permitidos = ['Supervisor', 'Administrador']
+
+    def get(self, request, pk):
+        incidente = get_object_or_404(Incidente, pk=pk)
+        especialistas = get_especialistas_ordenados(incidente)
+        return render(request, 'incidents/asignar_especialista.html', {
+            'incidente': incidente,
+            'especialistas': especialistas,
+        })
+
+    def post(self, request, pk):
+        incidente = get_object_or_404(Incidente, pk=pk)
+        especialista_pk = request.POST.get('especialista_pk')
+        especialista = get_object_or_404(Persona, pk=especialista_pk)
+        incidente.especialista_asignado = especialista
+        incidente.estado_incidente = Estado_Incidente.objects.get(code='ASI')
+        incidente.fecha_asignacion = timezone.now()
+        incidente.save()
+        return redirect('incidente-lista')
+
+
+class IncidenteDeclinarView(RolRequeridoMixin, View):
+    roles_permitidos = ['Especialista', 'Supervisor', 'Administrador']
+
     def post(self, request, pk):
         incidente = get_object_or_404(Incidente, pk=pk)
         motivo = request.POST.get('motivo_rechazo')
-        # 1. Cambiar estado
         incidente.estado_incidente = Estado_Incidente.objects.get(code='REC')
-
-        # 2. Guardar motivo en otra_informacion
         texto = f"[{timezone.now().strftime('%Y-%m-%d %H:%M')}] Rechazado por {request.user}: {motivo}\n"
         incidente.otra_informacion = (incidente.otra_informacion or "") + texto
         incidente.save()
-
-        # 3. Enviar correo al supervisor (si existe)
         if incidente.supervisor and incidente.supervisor.usuario_django:
-            recipient_list=[incidente.supervisor.usuario_django.email]
             send_mail(
                 subject=f"Incidente {incidente.codigo} rechazado",
                 message=f"El incidente {incidente.codigo} ha sido rechazado.\nMotivo: {motivo}",
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[incidente.supervisor.email],
+                recipient_list=[incidente.supervisor.usuario_django.email],
+                fail_silently=False,
             )
-        # 4. Enviar correo a usuarios de notificaciones asociadas
-        if hasattr(incidente, "notificaciones"):
-            correos = [
-                n.usuario.email
-                for n in incidente.notificaciones_incidente.all()
-                if n.usuario and n.usuario_notificador.email
-            ]
-            if correos:
-                send_mail(
-                    subject=f"Actualización del incidente {incidente.codigo}",
-                    message=f"El incidente ha sido rechazado.\nMotivo: {motivo}",
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=correos,
-                )
+        correos = [
+            n.usuario_notificador.email
+            for n in incidente.notificaciones_incidente.all()
+            if n.usuario_notificador and n.usuario_notificador.email
+        ]
+        if correos:
+            send_mail(
+                subject=f"Actualización del incidente {incidente.codigo}",
+                message=f"El incidente ha sido rechazado.\nMotivo: {motivo}",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=correos,
+                fail_silently=False,
+            )
         return redirect('incidente-detalle', pk=pk)
-
-class IncidenteDetailView(DetailView):
-    model = Incidente
-    template_name = 'incidents/incident_detail.html'

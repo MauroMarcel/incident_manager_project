@@ -3,7 +3,13 @@
 {% block content %}
     <h2>Notificaciones</h2>
     <div class="notifications-container">
-
+        {% if request.user.is_authenticated %}
+        <div class="mb-3">
+            <a href="{% url 'notification-create' %}" class="btn btn-primary">
+                Nueva Notificación
+            </a>
+        </div>
+        {% endif %}
         {% for notificacion in object_list %}
             <div class="notification">
                 <h3>{{ notificacion.asunto }}</h3>
