@@ -105,9 +105,22 @@
                 <ul>
                     {% for notificacion in incidente.notificaciones_incidente.all %}
                         <li>
-                            <a href="{% url 'notification-detail' notificacion.pk %}">
-                                {{ notificacion.asunto }} — {{ notificacion.usuario_notificador }}
-                            </a>
+                            {% if es_alta_gerencia %}
+                                {% with areas_supervision=request.user.perfil_persona.config_gerencia.areas_supervision.all %}
+                                    {% if notificacion.area_notificacion in areas_supervision %}
+                                        <a href="{% url 'notification-detail' notificacion.pk %}">
+                                            {{ notificacion.asunto }} — {{ notificacion.usuario_notificador }}
+                                        </a>
+                                    {% else %}
+                                        {{ notificacion.asunto }} — {{ notificacion.usuario_notificador }}
+                                        <span class="text-muted">(sin acceso)</span>
+                                    {% endif %}
+                                {% endwith %}
+                            {% else %}
+                                <a href="{% url 'notification-detail' notificacion.pk %}">
+                                    {{ notificacion.asunto }} — {{ notificacion.usuario_notificador }}
+                                </a>
+                            {% endif %}
                         </li>
                     {% endfor %}
                 </ul>

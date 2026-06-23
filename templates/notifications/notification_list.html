@@ -10,6 +10,15 @@
             </a>
         </div>
         {% endif %}
+        <!-- Formulario de filtros -->
+        <div>
+            <form method="GET" class="mb-4">
+                {{ filterset.form.as_p }}
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+                <a href="{% url 'notification-list' %}" class="btn btn-secondary">Limpiar</a>
+            </form>
+        </div>
+        
         {% for notificacion in object_list %}
             <div class="notification">
                 <h3>{{ notificacion.asunto }}</h3>

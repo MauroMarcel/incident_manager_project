@@ -30,7 +30,6 @@ class Persona(ModeloBase):
     blank=True,
     related_name='personas'
 )
-
     class Meta:
         verbose_name = "Persona"
         verbose_name_plural = "Personas"
@@ -39,3 +38,24 @@ class Persona(ModeloBase):
     def __str__(self):
         return f"{self.nombre} {self.apellidos} ({self.identificador_interno})"
 
+
+
+
+class ConfiguracionAltaGerencia(ModeloBase):
+    persona = models.OneToOneField(
+        Persona,
+        on_delete=models.CASCADE,
+        related_name='config_gerencia'
+    )
+    areas_supervision = models.ManyToManyField(
+        Area,
+        blank=True,
+        related_name='supervisores_gerencia'
+    )
+
+    class Meta:
+        verbose_name = "Configuración Alta Gerencia"
+        verbose_name_plural = "Configuraciones Alta Gerencia"
+
+    def __str__(self):
+        return f"Config. gerencia — {self.persona}"

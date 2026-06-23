@@ -1,6 +1,5 @@
 from django.contrib import admin
-from .models import Persona, Categoria_Persona, Cargo, Estado_Persona
-from references.admin import NomencladorAdmin
+from .models import Persona, ConfiguracionAltaGerencia
 
 
 class PersonaAdmin(admin.ModelAdmin):
@@ -11,7 +10,13 @@ class PersonaAdmin(admin.ModelAdmin):
     #para colocar una barra de busqueda
     search_fields = ('identificador_interno', 'nombre', 'apellidos', 'email', 'cargo', 'estado_persona')
 
+class ConfiguracionAltaGerenciaAdmin(admin.ModelAdmin):
+    filter_horizontal = ('areas_supervision',)
+
+
 
 admin.site.register(Persona, PersonaAdmin)
+admin.site.register(ConfiguracionAltaGerencia, ConfiguracionAltaGerenciaAdmin)
 
-# Register your models here.
+
+

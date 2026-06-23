@@ -7,14 +7,15 @@ from django.conf import settings
 from django.utils import timezone
 from django.db.models import Count, Q
 from django.contrib.auth.models import Group
-
+from django.contrib import messages
 from base.mixins import RolRequeridoMixin
 from notifications.models import Notificacion
 from references.models import Estado_Incidente, Estado_Notificacion
 from users.models import Persona
 from .models import Incidente
 from .forms import IncidenteForm, IncidenteReporteOficialForm, IncidenteClasificacionInternaForm, IncidenteTemporalidadForm
-
+from base.utils import get_areas_supervision
+from .filters import IncidenteFilter
 
 def get_especialistas_ordenados(incidente):
     grupo_especialista = Group.objects.get(name='Especialista')
@@ -58,14 +59,26 @@ class IncidenteListView(RolRequeridoMixin, ListView):
 
     def get_queryset(self):
         user = self.request.user
-        if user.groups.filter(name='Especialista').exists():
-            return Incidente.objects.filter(
-                especialista_asignado=user.perfil_persona
+        if user.groups.filter(name='Alta Gerencia').exists():
+            areas = get_areas_supervision(user.perfil_persona)
+            queryset= Incidente.objects.filter(area_afectada__in=areas)
+        elif user.groups.filter(name='Especialista').exists():
+            queryset= Incidente.objects.filter(especialista_asignado=user.perfil_persona
             ).exclude(estado_incidente__code='REC')
-        if user.groups.filter(name='Supervisor').exists():
-            return Incidente.objects.all()
-        if user.groups.filter(name='Administrador').exists():
-            return Incidente.objects.all()
+        elif user.groups.filter(name='Supervisor').exists():
+            queryset= Incidente.objects.all()
+        elif user.groups.filter(name='Administrador').exists():
+            queryset= Incidente.objects.all()
+        else:
+            queryset = Incidente.objects.none()
+        
+        self.filterset = IncidenteFilter(self.request.GET, queryset=queryset)
+        return self.filterset.qs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['filterset'] = self.filterset
+        return context
 
 
 class IncidenteCreateView(RolRequeridoMixin, CreateView):
@@ -92,13 +105,20 @@ class IncidenteCreateView(RolRequeridoMixin, CreateView):
         estado_aceptada = Estado_Notificacion.objects.get(code='ACE')
         notificacion.estado_notificacion = estado_aceptada
         notificacion.save()
-        send_mail(
-            subject='Notificación aceptada — SGIC',
-            message=f'Su notificación sobre "{notificacion.asunto}" está siendo investigada.',
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[notificacion.usuario_notificador.email],
-            fail_silently=False,
-        )
+        if self.request.user.email:
+            send_mail(
+                subject='Notificación aceptada — SGIC',
+                message=f'Su notificación sobre "{notificacion.asunto}" está siendo investigada.',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[notificacion.usuario_notificador.email],
+                fail_silently=False,
+            )
+        else:
+            messages.warning(
+                self.request,
+                'No se pudo enviar el correo de confirmación porque no tienes un email registrado.'
+            )
+        
         return response
 
 
@@ -185,24 +205,39 @@ class IncidenteDeclinarView(RolRequeridoMixin, View):
         incidente.otra_informacion = (incidente.otra_informacion or "") + texto
         incidente.save()
         if incidente.supervisor and incidente.supervisor.usuario_django:
-            send_mail(
-                subject=f"Incidente {incidente.codigo} rechazado",
-                message=f"El incidente {incidente.codigo} ha sido rechazado.\nMotivo: {motivo}",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[incidente.supervisor.usuario_django.email],
-                fail_silently=False,
-            )
+            if self.request.user.email:
+                send_mail(
+                    subject=f"Incidente {incidente.codigo} rechazado",
+                    message=f"El incidente {incidente.codigo} ha sido rechazado.\nMotivo: {motivo}",
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[incidente.supervisor.usuario_django.email],
+                    fail_silently=False,
+                )
+            else:
+                messages.warning(
+                    self.request,
+                    'No se pudo enviar el correo de confirmación porque no tienes un email registrado.'
+                )       
+
         correos = [
             n.usuario_notificador.email
             for n in incidente.notificaciones_incidente.all()
             if n.usuario_notificador and n.usuario_notificador.email
         ]
         if correos:
-            send_mail(
-                subject=f"Actualización del incidente {incidente.codigo}",
-                message=f"El incidente ha sido rechazado.\nMotivo: {motivo}",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=correos,
-                fail_silently=False,
-            )
+            if self.request.user.email:
+                send_mail(
+                    subject=f"Actualización del incidente {incidente.codigo}",
+                    message=f"El incidente ha sido rechazado.\nMotivo: {motivo}",
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=correos,
+                    fail_silently=False,
+                )
+            else:
+                messages.warning(
+                    self.request,
+                    'No se pudo enviar el correo de confirmación porque no tienes un email registrado.'
+                )
+            
+            
         return redirect('incidente-detalle', pk=pk)

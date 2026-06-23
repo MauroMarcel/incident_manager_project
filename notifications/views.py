@@ -5,12 +5,13 @@ from django.views import View
 from django.shortcuts import get_object_or_404, redirect
 from django.core.mail import send_mail
 from django.conf import settings
-
+from base.utils import get_areas_supervision
 from base.mixins import RolRequeridoMixin
 from references.models import Estado_Notificacion
 from .models import Notificacion
 from .form import NotificacionForm
 from incidents.models import Incidente
+from .filters import NotificacionFilter
 
 class NotificationCreateView(RolRequeridoMixin, CreateView):
     roles_permitidos = ['Usuario', 'Supervisor', 'Administrador', 'Especialista', 'Alta Gerencia']
@@ -26,13 +27,20 @@ class NotificationCreateView(RolRequeridoMixin, CreateView):
         form.instance.estado_notificacion = estado_inicial
         form.instance.usuario_notificador = self.request.user
         response = super().form_valid(form)
-        send_mail(
-            subject='Notificación recibida — SGIC',
-            message=f'Su notificación sobre "{self.object.asunto}" fue registrada correctamente.',
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[self.request.user.email],
-            fail_silently=False,
-        )
+        # Validacion para ver si el usuario tiene o no email para notificarle que fue registrada su notificacion
+        if self.request.user.email:
+            send_mail(
+                subject='Notificación recibida — SGIC',
+                message=f'Su notificación sobre "{self.object.asunto}" fue registrada correctamente.',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[self.request.user.email],
+                fail_silently=False,
+            )
+        else:
+            messages.warning(
+                self.request,
+                'No se pudo enviar el correo de confirmación porque no tienes un email registrado.'
+            )            
         return response
 
 
@@ -56,14 +64,27 @@ class NotificationListView(RolRequeridoMixin, ListView):
 
     def get_queryset(self):
         user = self.request.user
+        # Primero se filtra por rol
         if user.groups.filter(name='Usuario').exists():
-            return Notificacion.objects.filter(usuario_notificador=user)
-        if user.groups.filter(name='Alta Gerencia').exists():
-            return Notificacion.objects.all()
-        if user.groups.filter(name='Supervisor').exists():
-            return Notificacion.objects.all()
-        if user.groups.filter(name='Administrador').exists():
-            return Notificacion.objects.all()
+            queryset = Notificacion.objects.filter(usuario_notificador=user)
+        elif user.groups.filter(name='Alta Gerencia').exists():
+            areas = get_areas_supervision(user.perfil_persona)
+            queryset = Notificacion.objects.filter(area_notificacion__in=areas)
+        elif user.groups.filter(name='Supervisor').exists():
+            queryset = Notificacion.objects.all()
+        elif user.groups.filter(name='Administrador').exists():
+            queryset = Notificacion.objects.all()
+        else:
+            queryset = Notificacion.objects.none()
+        
+        # Luego se aplica el filtro de django_filters encima
+        self.filterset = NotificacionFilter(self.request.GET, queryset=queryset)
+        return self.filterset.qs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['filterset'] = self.filterset
+        return context
 
 
 class NotificationRechazarView(RolRequeridoMixin, View):
@@ -75,13 +96,19 @@ class NotificationRechazarView(RolRequeridoMixin, View):
         estado = Estado_Notificacion.objects.get(code='REC')
         notificacion.estado_notificacion = estado
         notificacion.respuesta_supervisor = motivo
-        send_mail(
-            subject='Notificación rechazada — SGIC',
-            message=f'Su notificación sobre "{notificacion.asunto}" fue rechazada.\nMotivo: {motivo}',
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[notificacion.usuario_notificador.email],
-            fail_silently=False,
-        )
+        if self.request.user.email:
+            send_mail(
+                subject='Notificación rechazada — SGIC',
+                message=f'Su notificación sobre "{notificacion.asunto}" fue rechazada.\nMotivo: {motivo}',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[notificacion.usuario_notificador.email],
+                fail_silently=False,
+            )
+        else:
+            messages.warning(
+                self.request,
+                'No se pudo enviar el correo de confirmación porque no tienes un email registrado.'
+            )
         notificacion.save()
         return redirect('notification-detail', pk=pk)
 
@@ -105,11 +132,17 @@ class NotificationVincularView(RolRequeridoMixin, View):
                 f'con el área del incidente ({incidente.area_afectada}). '
                 f'Notificación: {notificacion.pk}'
             )
-        send_mail(
-            subject='Notificación aceptada — SGIC',
-            message=f'Su notificación sobre "{notificacion.asunto}" está siendo investigada.',
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[notificacion.usuario_notificador.email],
-            fail_silently=False,
-        )
+        if self.request.user.email:
+            send_mail(
+                subject='Notificación aceptada — SGIC',
+                message=f'Su notificación sobre "{notificacion.asunto}" está siendo investigada.',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[notificacion.usuario_notificador.email],
+                fail_silently=False,
+            )
+        else:
+            messages.warning(
+                self.request,
+                'No se pudo enviar el correo de confirmación porque no tienes un email registrado.'
+            )
         return redirect("notification-detail", pk=notificacion.pk)
