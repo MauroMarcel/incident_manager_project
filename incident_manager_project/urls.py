@@ -9,4 +9,5 @@ urlpatterns = [
     path('incidentes/', include('incidents.urls')),
     path('indicadores/', include('IoC.urls')),
     path('personas/', include('users.urls')),
+    path('organizacion/', include('organization.urls')),
 ]

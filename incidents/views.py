@@ -86,8 +86,14 @@ class IncidenteCreateView(RolRequeridoMixin, CreateView):
     model = Incidente
     template_name = 'incidents/incident_form.html'
     form_class = IncidenteForm
-    success_url = '/'
-
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+        response['Pragma'] = 'no-cache'
+        return response
+    def get_success_url(self):
+        return reverse_lazy('incidente-lista')
+    
     def get_initial(self):
         notificacion = get_object_or_404(Notificacion, pk=self.kwargs['notificacion_pk'])
         return {
@@ -97,15 +103,38 @@ class IncidenteCreateView(RolRequeridoMixin, CreateView):
 
     def form_valid(self, form):
         notificacion = get_object_or_404(Notificacion, pk=self.kwargs['notificacion_pk'])
+        
+        # PRIMERO verificar si ya tiene incidente asociado
+        if notificacion.incidente_asociado:
+            messages.warning(
+                self.request,
+                f'Esta notificación ya está asociada al incidente {notificacion.incidente_asociado.codigo}.'
+            )
+            return redirect('notification-detail', pk=notificacion.pk)
+        
+        # LUEGO verificar duplicado
+        incidente_similar = Incidente.objects.filter(
+            titulo=form.cleaned_data['titulo'],
+            area_afectada=form.cleaned_data['area_afectada']
+        ).exists()
+        if incidente_similar:
+            messages.warning(
+                self.request,
+                'Advertencia: ya existe un incidente con el mismo título y área afectada.'
+            )
+        
+        # LUEGO guardar
         form.instance.supervisor = self.request.user.perfil_persona
         form.instance.estado_incidente = Estado_Incidente.objects.get(code='REP')
         form.instance.fecha_reportado = notificacion.fecha_notificacion
         response = super().form_valid(form)
+        
         notificacion.incidente_asociado = self.object
         estado_aceptada = Estado_Notificacion.objects.get(code='ACE')
         notificacion.estado_notificacion = estado_aceptada
         notificacion.save()
-        if self.request.user.email:
+        
+        if notificacion.usuario_notificador.email:
             send_mail(
                 subject='Notificación aceptada — SGIC',
                 message=f'Su notificación sobre "{notificacion.asunto}" está siendo investigada.',
@@ -116,7 +145,7 @@ class IncidenteCreateView(RolRequeridoMixin, CreateView):
         else:
             messages.warning(
                 self.request,
-                'No se pudo enviar el correo de confirmación porque no tienes un email registrado.'
+                'No se pudo enviar el correo de confirmación porque el usuario no tiene email registrado.'
             )
         
         return response

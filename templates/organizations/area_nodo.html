@@ -1,0 +1,21 @@
+<li>
+    {% if request.user.perfil_persona.area == area %}
+        <strong style="color: #0d6efd;">{{ area.nombre }} ★</strong>
+    {% else %}
+        {{ area.nombre }}
+    {% endif %}
+    
+    {% if es_admin %}
+        <a href="{% url 'area-crear' %}?parent={{ area.pk }}" class="btn btn-sm btn-outline-primary ms-2">
+            + Subárea
+        </a>
+    {% endif %}
+    
+    {% if area.subareas.all %}
+        <ul>
+            {% for subarea in area.subareas.all %}
+                {% include 'organizations/area_nodo.html' with area=subarea %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+</li>

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Estructura Organizacional</h4>
+        </div>
+        <div class="card-body">
+            {% if es_admin %}
+            <div class="mb-3">
+                <a href="{% url 'area-crear' %}" class="btn btn-primary">
+                    Nueva Área
+                </a>
+            </div>
+            {% endif %}
+            <ul>
+                {% for area in areas_raiz %}
+                    {% include 'organizations/area_nodo.html' with area=area %}
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -44,6 +44,10 @@
                 {% if es_admin or es_supervisor or es_especialista %}
                 <a href="{% url 'ioc-lista' %}">Indicadores de Compromiso</a>
                 {% endif %}
+                <!-- Usuarios — solo Admin, Supervisor, Alta Gerencia -->
+                {% if es_admin or es_supervisor or es_alta_gerencia %}
+                <a href="{% url 'area-tree' %}">Areas</a>
+                {% endif %}
                 <!-- Usuarios — solo Admin -->
                 {% if es_admin %}
                 <a href="{% url 'persona-lista' %}">Usuarios</a>

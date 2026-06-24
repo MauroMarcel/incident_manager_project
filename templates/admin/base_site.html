@@ -1,0 +1,15 @@
+{% extends "admin/base.html" %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">SGIC Admin</a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}
+<div style="padding: 5px 10px; background: #417690;">
+    <a href="/" style="color: white; text-decoration: none;">
+        ← Volver al sistema
+    </a>
+</div>
+{% endblock %}
