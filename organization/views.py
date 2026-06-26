@@ -10,6 +10,13 @@ class AreaTreeView(RolRequeridoMixin, TemplateView):
     roles_permitidos = ['Administrador', 'Supervisor', 'Alta Gerencia']
     template_name = 'organizations/area_tree.html'
     
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Solo las áreas raíz — sin área superior
@@ -23,7 +30,14 @@ class AreaCreateView(RolRequeridoMixin, CreateView):
     form_class = AreaForm
     template_name = 'organizations/area_form.html'
     roles_permitidos = ['Administrador'] 
-
+    
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
+    
     def get_success_url(self):
         # Redirige al árbol organizacional después de crear el área
         return reverse_lazy('area-tree')

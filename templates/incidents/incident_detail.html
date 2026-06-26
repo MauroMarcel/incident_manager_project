@@ -1,5 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
+{% for message in messages %}
+    {% if 'incidente' in message.tags %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endif %}
+{% endfor %}
 <div class="container mt-4">
     <div class="card shadow-sm">
         <div class="card-header bg-dark text-white">
@@ -95,7 +103,6 @@
             <p><strong>Fecha de cierre:</strong> {{ incidente.fecha_solucion|default:"—" }}</p>
 
             <hr>
-
             <!-- ========================= -->
             <!--  NOTIFICACIONES ASOCIADAS -->
             <!-- ========================= -->
@@ -129,18 +136,76 @@
             {% endif %}
 
             <!-- ========================= -->
+            <!--        EVIDENCIAS         -->
+            <!-- ========================= -->
+            <hr>
+            <h5>Evidencias</h5>
+
+            <!-- Contenedor de evidencias en cuadrícula -->
+            <div class="row g-3 mb-3">
+                <!-- Evidencias de notificaciones asociadas -->
+                {% for notificacion in incidente.notificaciones_incidente.all %}
+                    {% for evidencia in notificacion.evidencias.all %}
+                        <div class="col-md-4 col-sm-6">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <span class="badge bg-secondary mb-2">De notificación</span>
+                                    <a href="{{ evidencia.archivo.url }}" target="_blank" class="d-block text-truncate">
+                                        {{ evidencia.archivo.name }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+
+                <!-- Evidencias propias del incidente -->
+                {% for evidencia in incidente.evidencias.all %}
+                    <div class="col-md-4 col-sm-6">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <span class="badge bg-primary mb-2">Del incidente</span>
+                                <a href="{{ evidencia.archivo.url }}" target="_blank" class="d-block text-truncate">
+                                    {{ evidencia.archivo.name }}
+                                </a>
+                                {% if es_admin or es_supervisor %}
+                                    <form method="POST" action="{% url 'incidente-evidencia-eliminar' evidencia.pk %}" 
+                                            style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-danger">🗑</button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-12">
+                        <p class="text-muted">No hay evidencias del incidente.</p>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Botón para subir evidencia (siempre visible, fuera del contenedor flexible) -->
+            {% if es_admin or es_supervisor or incidente.especialista_asignado == request.user.perfil_persona %}
+                {% if incidente.estado_incidente.code != 'REC' %}
+                    <button data-bs-toggle="modal" data-bs-target="#modalEvidencia" 
+                            class="btn btn-primary">
+                        Subir Evidencia
+                    </button>
+                {% endif %}
+            {% endif %}
+
+            <!-- ========================= -->
             <!--     BOTONES DE ACCIÓN     -->
             <!-- ========================= -->
             <div class="d-flex gap-2 mt-3">
                 <!--Boton para volver al listado-->
-                <button onclick="history.back()" class="btn btn-secondary" style="padding: 0.4rem 0.8rem;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" viewBox="0 0 16 16">
-                        <path fill-rule="evenodd" d="M15 8a.5.5 0 0 1-.5.5H3.707l4.147 4.146a.5.5 0 0 1-.708.708l-5-5a.5.5 0 0 1 0-.708l5-5a.5.5 0 1 1 .708.708L3.707 7.5H14.5A.5.5 0 0 1 15 8z"/>
-                    </svg>
-                </button>
+                <a href="{% url 'incidente-lista' %}" class="btn btn-secondary">
+                    Volver al listado
+                </a>
 
                 {% if incidente.estado_incidente.code != 'REC' and incidente.estado_incidente.code != 'RES' %}
-                    {% if es_admin or es_supervisor or es_especialista %}
+                    {% if es_admin or es_supervisor or incidente.especialista_asignado == request.user.perfil_persona %}
                         <a href="{% url 'incidente-wizard' incidente.pk '1' %}" 
                         class="btn btn-primary">Clasificar</a>
                     {% endif %}
@@ -151,12 +216,13 @@
                             class="btn btn-warning">Asignar Especialista</a>
                         {% endif %}
                     {% endif %}
-                    {% if es_admin or es_supervisor or es_especialista %}
+                    {% if es_admin or es_supervisor or incidente.especialista_asignado == request.user.perfil_persona %}
                         <button data-bs-toggle="modal" data-bs-target="#modalDeclinar" class="btn btn-danger">
                             Declinar
                         </button>
                     {% endif %}
                 {% endif %}
+            <!-- fin d-flex botones de acción -->
             </div>
 
         </div>
@@ -173,6 +239,28 @@
                         {% csrf_token %}
                         <textarea name="motivo_rechazo" class="form-control" rows="4" required>Este incidente ha sido rechazado. </textarea>
                         <button type="submit" class="btn btn-danger mt-3">Confirmar rechazo</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+<!--Modal para subir Evidencias a Incidente-->
+    <div class="modal fade" id="modalEvidencia">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5>Subir Evidencia</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" 
+                        action="{% url 'incidente-evidencia' incidente.pk %}"
+                        enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="file" name="archivo" class="form-control" required>
+                        <button type="submit" class="btn btn-success mt-3">
+                            Subir
+                        </button>
                     </form>
                 </div>
             </div>

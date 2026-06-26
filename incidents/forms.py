@@ -1,5 +1,5 @@
 from django import forms
-from .models import Incidente
+from .models import Incidente, Evidencia_Incidente
 from users.models import Persona
 from django.contrib.auth.models import Group
 
@@ -17,7 +17,6 @@ class IncidenteReporteOficialForm(forms.ModelForm):
             'contramedidas', 'otra_informacion',
             'peligrosidad', 'sistema_operativo', 'subcategoria'
         ]
-
 
 class IncidenteClasificacionInternaForm(forms.ModelForm):
     class Meta:
@@ -46,3 +45,11 @@ class IncidenteTemporalidadForm(forms.ModelForm):
                 format='%Y-%m-%dT%H:%M'
             ),
         }
+
+
+
+
+class EvidenciaIncidenteForm(forms.ModelForm):
+    class Meta:
+        model = Evidencia_Incidente
+        fields = ['archivo']    

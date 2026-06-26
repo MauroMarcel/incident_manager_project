@@ -8,7 +8,7 @@ from django.conf import settings
 from base.utils import get_areas_supervision
 from base.mixins import RolRequeridoMixin
 from references.models import Estado_Notificacion
-from .models import Notificacion
+from .models import Notificacion, Evidencia_Notificacion
 from .form import NotificacionForm
 from incidents.models import Incidente
 from .filters import NotificacionFilter
@@ -49,6 +49,18 @@ class NotificationDetailView(RolRequeridoMixin, DetailView):
     model = Notificacion
     template_name = 'notifications/notification_detail.html'
 
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        if request.user.groups.filter(name='Especialista').exists():
+            notificacion = self.get_object()
+            if not notificacion.incidente_asociado or \
+            notificacion.incidente_asociado.especialista_asignado != request.user.perfil_persona:
+                return redirect('acceso-denegado')
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         q = self.request.GET.get('q', '')
@@ -61,7 +73,14 @@ class NotificationListView(RolRequeridoMixin, ListView):
     roles_permitidos = ['Usuario', 'Supervisor', 'Administrador', 'Especialista', 'Alta Gerencia']
     model = Notificacion
     template_name = 'notifications/notification_list.html'
-
+    
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
+    
     def get_queryset(self):
         user = self.request.user
         # Primero se filtra por rol
@@ -89,7 +108,14 @@ class NotificationListView(RolRequeridoMixin, ListView):
 
 class NotificationRechazarView(RolRequeridoMixin, View):
     roles_permitidos = ['Supervisor', 'Administrador']
-
+    
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
+    
     def post(self, request, pk):
         notificacion = get_object_or_404(Notificacion, pk=pk)
         motivo = request.POST.get('motivo_rechazo')
@@ -115,6 +141,13 @@ class NotificationRechazarView(RolRequeridoMixin, View):
 
 class NotificationVincularView(RolRequeridoMixin, View):
     roles_permitidos = ['Supervisor', 'Administrador']
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
 
     def post(self, request, pk):
         notificacion = get_object_or_404(Notificacion, pk=pk)
@@ -146,3 +179,52 @@ class NotificationVincularView(RolRequeridoMixin, View):
                 'No se pudo enviar el correo de confirmación porque no tienes un email registrado.'
             )
         return redirect("notification-detail", pk=notificacion.pk)
+
+class NotificacionEvidenciaCreateView(RolRequeridoMixin, View):
+    roles_permitidos = ['Usuario', 'Especialista', 'Supervisor', 'Administrador']
+    
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
+    
+    def post(self, request, pk):
+        notificacion = get_object_or_404(Notificacion, pk=pk)
+        
+        # Verificar permisos del especialista
+        if request.user.groups.filter(name='Especialista').exists():
+            print(f"Usuario: {request.user}")
+            print(f"Perfil persona: {request.user.perfil_persona}")
+            print(f"Incidente asociado: {notificacion.incidente_asociado}")
+            if notificacion.incidente_asociado:
+                print(f"Especialista del incidente: {notificacion.incidente_asociado.especialista_asignado}")
+
+            if not notificacion.incidente_asociado or \
+            notificacion.incidente_asociado.especialista_asignado != request.user.perfil_persona:
+                messages.warning(
+                    request, 
+                    'No tienes permiso para subir evidencias a esta notificación.',
+                    extra_tags='notificacion'
+                )
+                return redirect('notification-detail', pk=pk)
+        
+        archivo = request.FILES.get('archivo')
+        if archivo:
+            Evidencia_Notificacion.objects.create(
+                notificacion=notificacion,
+                archivo=archivo
+            )
+            messages.success(
+                request, 
+                'Evidencia subida correctamente.',
+                extra_tags='notificacion'
+            )
+        else:
+            messages.warning(
+                request, 
+                'No se seleccionó ningún archivo.',
+                extra_tags='notificacion'
+            )
+        return redirect('notification-detail', pk=pk)

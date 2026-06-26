@@ -12,7 +12,7 @@ from base.mixins import RolRequeridoMixin
 from notifications.models import Notificacion
 from references.models import Estado_Incidente, Estado_Notificacion
 from users.models import Persona
-from .models import Incidente
+from .models import Incidente, Evidencia_Incidente
 from .forms import IncidenteForm, IncidenteReporteOficialForm, IncidenteClasificacionInternaForm, IncidenteTemporalidadForm
 from base.utils import get_areas_supervision
 from .filters import IncidenteFilter
@@ -57,6 +57,13 @@ class IncidenteListView(RolRequeridoMixin, ListView):
     model = Incidente
     template_name = 'incidents/incident_list.html'
 
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
+
     def get_queryset(self):
         user = self.request.user
         if user.groups.filter(name='Alta Gerencia').exists():
@@ -86,11 +93,14 @@ class IncidenteCreateView(RolRequeridoMixin, CreateView):
     model = Incidente
     template_name = 'incidents/incident_form.html'
     form_class = IncidenteForm
+    
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
-        response['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
         response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
         return response
+    
     def get_success_url(self):
         return reverse_lazy('incidente-lista')
     
@@ -155,6 +165,18 @@ class IncidenteDetailView(RolRequeridoMixin, DetailView):
     roles_permitidos = ['Especialista', 'Supervisor', 'Administrador', 'Alta Gerencia']
     model = Incidente
     template_name = 'incidents/incident_detail.html'
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        # Verificación de especialista asignado
+        if request.user.groups.filter(name='Especialista').exists():
+            incidente = self.get_object()
+            if incidente.especialista_asignado != request.user.perfil_persona:
+                return redirect('acceso-denegado')
+        # Deshabilitar caché del navegador
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
 
 
 class IncidenteWizardView(RolRequeridoMixin, View):
@@ -165,7 +187,17 @@ class IncidenteWizardView(RolRequeridoMixin, View):
         '2': IncidenteClasificacionInternaForm,
         '3': IncidenteTemporalidadForm,
     }
-
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.groups.filter(name='Especialista').exists():
+            incidente = get_object_or_404(Incidente, pk=self.kwargs['pk'])
+            if incidente.especialista_asignado != request.user.perfil_persona:
+                return redirect('acceso-denegado')
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
+    
     def get(self, request, pk, paso='1'):
         incidente = get_object_or_404(Incidente, pk=pk)
         FormClass = self.PASOS[paso]
@@ -204,6 +236,13 @@ class IncidenteWizardView(RolRequeridoMixin, View):
 class IncidenteAsignarEspecialistaView(RolRequeridoMixin, View):
     roles_permitidos = ['Supervisor', 'Administrador']
 
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
+
     def get(self, request, pk):
         incidente = get_object_or_404(Incidente, pk=pk)
         especialistas = get_especialistas_ordenados(incidente)
@@ -226,6 +265,17 @@ class IncidenteAsignarEspecialistaView(RolRequeridoMixin, View):
 class IncidenteDeclinarView(RolRequeridoMixin, View):
     roles_permitidos = ['Especialista', 'Supervisor', 'Administrador']
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.groups.filter(name='Especialista').exists():
+            incidente = get_object_or_404(Incidente, pk=self.kwargs['pk'])
+            if incidente.especialista_asignado != request.user.perfil_persona:
+                return redirect('acceso-denegado')
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
+    
     def post(self, request, pk):
         incidente = get_object_or_404(Incidente, pk=pk)
         motivo = request.POST.get('motivo_rechazo')
@@ -270,3 +320,50 @@ class IncidenteDeclinarView(RolRequeridoMixin, View):
             
             
         return redirect('incidente-detalle', pk=pk)
+
+class IncidenteEvidenciaCreateView(RolRequeridoMixin, View):
+    roles_permitidos = ['Especialista', 'Supervisor', 'Administrador']
+    
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
+    
+    def post(self, request, pk):
+        incidente = get_object_or_404(Incidente, pk=pk)
+        archivo = request.FILES.get('archivo')
+        if request.user.groups.filter(name='Especialista').exists():
+            if incidente.especialista_asignado != request.user.perfil_persona:
+                messages.warning(request, 'No tienes permiso para subir evidencias a este incidente.')
+                return redirect('incidente-detalle', pk=pk)
+        if archivo:
+            Evidencia_Incidente.objects.create(
+                incidente=incidente,
+                archivo=archivo
+            )
+            messages.success(request, 'Evidencia subida correctamente.', extra_tags='incidente')
+        else:
+            messages.warning(request, 'No se seleccionó ningún archivo.')
+        return redirect('incidente-detalle', pk=pk)
+
+
+class EvidenciaIncidenteDeleteView(RolRequeridoMixin, View):
+    roles_permitidos = ['Especialista', 'Supervisor', 'Administrador']
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
+
+    def post(self, request, pk):
+        evidencia = get_object_or_404(Evidencia_Incidente, pk=pk)
+        incidente_pk = evidencia.incidente.pk
+        evidencia.archivo.delete()  # elimina el archivo físico
+        evidencia.delete()          # elimina el registro de la BD
+        messages.success(request, 'Evidencia eliminada correctamente.', extra_tags='incidente')
+        return redirect('incidente-detalle', pk=incidente_pk)
+

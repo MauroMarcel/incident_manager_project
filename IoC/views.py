@@ -12,12 +12,27 @@ class IoCDetailView(RolRequeridoMixin,DetailView):
     template_name = 'IoC/ioc_detail.html'
     context_object_name = 'ioc'
 
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
+
+
 class IoCCreateView(RolRequeridoMixin,CreateView):
     roles_permitidos = ['Supervisor', 'Administrador', 'Especialista']
     model = IoC
     form_class = IoCForm
     template_name = 'IoC/ioc_form.html'
 
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
+    
     # Redirige al detalle del IoC recién creado
     def get_success_url(self):
         return reverse_lazy('ioc-detalle', kwargs={'pk': self.object.pk})
@@ -29,6 +44,13 @@ class IoCListView(RolRequeridoMixin,ListView):
     model = IoC
     template_name = 'IoC/ioc_list.html'
     context_object_name = 'iocs'
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
 
     def get_queryset(self):
         queryset= IoC.objects.all()

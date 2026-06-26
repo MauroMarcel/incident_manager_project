@@ -14,6 +14,13 @@ class PersonaCreateView(RolRequeridoMixin, CreateView):
     template_name = 'users/persona_form.html'
     success_url = reverse_lazy('persona-lista')
 
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
+
     def form_valid(self, form):
         persona = form.save(commit=False)
         persona.save()
@@ -54,6 +61,13 @@ class PersonaListView(RolRequeridoMixin, ListView):
     model = Persona
     template_name = 'users/persona_list.html'
     context_object_name = 'personas'
+    
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
 
 
 
@@ -62,3 +76,10 @@ class PersonaDetailView(RolRequeridoMixin, DetailView):
     model = Persona
     template_name = 'users/persona_detail.html'
     context_object_name = 'persona'
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response

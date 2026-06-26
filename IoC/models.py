@@ -10,7 +10,9 @@ class IoC(ModeloBase):
         )
     valor = models.CharField(max_length=255)
     descripcion=models.TextField(blank=True, null=True)
-
     class Meta:
         verbose_name = "Indicador de Compromiso (IOC)"
         verbose_name_plural = "Indicadores de Compromiso (IOCs)"
+    
+    def __str__(self):
+        return f"{self.tipo_ioc} — {self.valor}"

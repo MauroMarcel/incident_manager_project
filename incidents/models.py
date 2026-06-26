@@ -179,4 +179,8 @@ class Evidencia_Incidente(ModeloBase):
         related_name='evidencias',
     )
     archivo = models.FileField(upload_to='evidencias_incidentes/')
+    class Meta:
+        verbose_name = "Evidencia del Incidente"
+        verbose_name_plural = "Evidencias del Incidente"
+        ordering = ['created']
 
