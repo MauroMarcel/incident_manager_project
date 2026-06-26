@@ -1,5 +1,6 @@
 from django import forms
 from .models import Incidente, Evidencia_Incidente
+from references.models import Subcategoria, Categoria
 from users.models import Persona
 from django.contrib.auth.models import Group
 
@@ -17,6 +18,19 @@ class IncidenteReporteOficialForm(forms.ModelForm):
             'contramedidas', 'otra_informacion',
             'peligrosidad', 'sistema_operativo', 'subcategoria'
         ]
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Agrupar subcategorías por categoría
+        choices = [('', '---------')]
+        for categoria in Categoria.objects.all():
+            subcategorias = Subcategoria.objects.filter(categoria=categoria)
+            if subcategorias.exists():
+                grupo = (
+                    categoria.name,
+                    [(s.pk, s.name) for s in subcategorias]
+                )
+                choices.append(grupo)
+        self.fields['subcategoria'].choices = choices
 
 class IncidenteClasificacionInternaForm(forms.ModelForm):
     class Meta:

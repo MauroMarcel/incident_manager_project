@@ -20,6 +20,22 @@
                     No
                 {% endif %}
             </p>
+            {% if persona.active %}
+                <form method="POST" action="{% url 'persona-eliminar' persona.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger mt-3"
+                            onclick="return confirm('¿Estás seguro? Esta acción desactivará a la persona y su usuario del sistema.')">
+                        Desactivar Persona
+                    </button>
+                </form>
+            {% else %}
+                <form method="POST" action="{% url 'persona-activar' persona.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success mt-3">
+                        Reactivar Persona
+                    </button>
+                </form>
+            {% endif %}
             <div class="d-flex gap-2 mt-3">
                 <a href="{% url 'persona-lista' %}" class="btn btn-secondary">
                     Volver al listado

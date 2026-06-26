@@ -5,4 +5,6 @@ urlpatterns = [
     path('', views.PersonaListView.as_view(), name='persona-lista'),
     path('crear/', views.PersonaCreateView.as_view(), name='persona-crear'),
     path('<uuid:pk>/', views.PersonaDetailView.as_view(), name='persona-detalle'),
+    path('<uuid:pk>/eliminar/', views.PersonaDeleteView.as_view(), name='persona-eliminar'),
+    path('<uuid:pk>/activar/', views.PersonaActivarView.as_view(), name='persona-activar'),
 ]

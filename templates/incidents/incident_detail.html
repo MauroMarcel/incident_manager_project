@@ -54,12 +54,14 @@
             <p><strong>Acciones / Contramedidas aplicadas:</strong></p>
             <p>{{ incidente.contramedidas|linebreaks }}</p>
 
-            <p><strong>Evidencias:</strong></p>
-            <p>{{ incidente.evidencias|linebreaks }}</p>
-
             <p><strong>Otra información relevante:</strong></p>
             <p>{{ incidente.otra_informacion|linebreaks }}</p>
-
+            <p><strong>Categoría:</strong> 
+                {{ incidente.subcategoria.categoria|default:"—" }}
+            </p>
+            <p><strong>Subcategoría:</strong> 
+                {{ incidente.subcategoria|default:"—" }}
+            </p>
             <hr>
 
             <!-- ========================= -->

@@ -9,6 +9,16 @@
                 Nueva Persona
             </a>
         </div>
+        <div class="mb-3 d-flex gap-2">
+            <a href="{% url 'persona-lista' %}?mostrar=activas" 
+            class="btn {% if mostrar == 'activas' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Personas Activas
+            </a>
+            <a href="{% url 'persona-lista' %}?mostrar=inactivas" 
+            class="btn {% if mostrar == 'inactivas' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+                Personas Inactivas
+            </a>
+        </div>
         {% for persona in object_list %}
             <div class="persona-card">
                 <h3>{{ persona.nombre }} {{ persona.apellidos }}</h3>
