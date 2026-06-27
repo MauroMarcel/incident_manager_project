@@ -161,3 +161,7 @@ DEFAULT_FROM_EMAIL = 'sgic@universidad.cu'
 # Evidencias
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# CSRF 403
+CSRF_FAILURE_VIEW = 'base.views.csrf_failure'
+

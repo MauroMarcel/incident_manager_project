@@ -11,4 +11,8 @@ class RolRequeridoMixin(LoginRequiredMixin):
             name__in=self.roles_permitidos
         ).exists():
             return redirect('acceso-denegado')
-        return super().dispatch(request, *args, **kwargs)
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response

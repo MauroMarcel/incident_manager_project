@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Deshabilitar caché del navegador -->
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>{% block title %}SGIC{% endblock %}</title>
     <!-- Bootstrap CSS via CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -33,7 +37,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <form method="POST" action="{% url 'logout' %}">
+                <form method="POST" action="{% url 'custom-logout' %}">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger">Cerrar sesión</button>
                 </form>
@@ -92,6 +96,15 @@
     </footer>
     <!-- Bootstrap JS via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Forzar recarga al usar botón retroceder -->
+    <script>
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            window.location.reload();
+        }
+    });
+    </script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

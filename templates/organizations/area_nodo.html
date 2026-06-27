@@ -1,6 +1,10 @@
 <li>
     {% if request.user.perfil_persona.area == area %}
-        <strong style="color: #0d6efd;">{{ area.nombre }} ★ (Tu área)</strong>
+        {% if es_alta_gerencia and area in request.user.perfil_persona.config_gerencia.areas_supervision.all %}
+            <strong style="color: #6f42c1;">{{ area.nombre }} ★◆ (Tu área y área supervisada)</strong>
+        {% else %}
+            <strong style="color: #0d6efd;">{{ area.nombre }} ★ (Tu área)</strong>
+        {% endif %}
     {% elif es_alta_gerencia and area in request.user.perfil_persona.config_gerencia.areas_supervision.all %}
         <strong style="color: #198754;">{{ area.nombre }} ◆ (Área supervisada)</strong>
     {% else %}

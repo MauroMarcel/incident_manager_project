@@ -100,7 +100,11 @@ class NotificationListView(RolRequeridoMixin, ListView):
             queryset = Notificacion.objects.filter(usuario_notificador=user)
         elif user.groups.filter(name='Alta Gerencia').exists():
             areas = get_areas_supervision(user.perfil_persona)
-            queryset = Notificacion.objects.filter(area_notificacion__in=areas)
+            queryset = (Notificacion.objects.filter(
+                area_notificacion__in=areas
+            ) | Notificacion.objects.filter(
+                usuario_notificador=user
+            )).distinct()
         elif user.groups.filter(name='Supervisor').exists():
             queryset = Notificacion.objects.all()
         elif user.groups.filter(name='Administrador').exists():
