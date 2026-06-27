@@ -51,11 +51,23 @@ class NotificationDetailView(RolRequeridoMixin, DetailView):
 
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
+        
         if request.user.groups.filter(name='Especialista').exists():
             notificacion = self.get_object()
             if not notificacion.incidente_asociado or \
             notificacion.incidente_asociado.especialista_asignado != request.user.perfil_persona:
+                return redirect ('acceso-denegado')
+        
+        if request.user.groups.filter(name='Alta Gerencia').exists():
+            notificacion = self.get_object()
+            from base.utils import get_areas_supervision
+            areas = get_areas_supervision(request.user.perfil_persona)
+            
+            # Puede acceder si el área está supervisada O si fue él quien la creó
+            if notificacion.area_notificacion not in areas and \
+            notificacion.usuario_notificador != request.user:
                 return redirect('acceso-denegado')
+        
         response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
         response['Pragma'] = 'no-cache'
         response['Expires'] = '0'

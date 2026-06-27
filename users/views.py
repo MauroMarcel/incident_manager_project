@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
 from references.models import Estado_Persona
+from incidents.models import Incidente
 
 class PersonaCreateView(RolRequeridoMixin, CreateView):
     roles_permitidos = ['Administrador']
@@ -90,19 +91,31 @@ class PersonaDeleteView(RolRequeridoMixin, View):
 
     def post(self, request, pk):
         persona = get_object_or_404(Persona, pk=pk)
-        persona = get_object_or_404(Persona, pk=pk)
-        persona.estado_persona = Estado_Persona.objects.get(code='INA')
-        # Borrado lógico
+        
+        # Verificar incidentes activos como especialista
+        incidentes_activos = Incidente.objects.filter(
+            especialista_asignado=persona,
+        ).exclude(
+            estado_incidente__code__in=['RES', 'REC']
+        )
+        
+        if incidentes_activos.exists():
+            messages.warning(
+                request,
+                f'Advertencia: {persona} tiene {incidentes_activos.count()} incidente(s) activo(s) asignado(s). '
+                f'Reasigna los incidentes antes de desactivar esta persona.'
+            )
+            return redirect('persona-detalle', pk=pk)
+        
+        # Si no tiene incidentes activos procede con la desactivación
         persona.active = False
         persona.fecha_baja = timezone.now()
-        
-        # Desactivar usuario de Django asociado si existe
+        persona.estado_persona = Estado_Persona.objects.get(code='INA')
         if persona.usuario_django:
             persona.usuario_django.is_active = False
             persona.usuario_django.save()
-        
         persona.save()
-        messages.success(request, f'La persona {persona} fue desactivada correctamente.')
+        messages.success(request, f'{persona} fue desactivada correctamente.')
         return redirect('persona-lista')
 
 class PersonaActivarView(RolRequeridoMixin, View):

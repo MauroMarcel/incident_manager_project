@@ -57,12 +57,6 @@ class IncidenteListView(RolRequeridoMixin, ListView):
     model = Incidente
     template_name = 'incidents/incident_list.html'
 
-    def dispatch(self, request, *args, **kwargs):
-        response = super().dispatch(request, *args, **kwargs)
-        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-        response['Pragma'] = 'no-cache'
-        response['Expires'] = '0'
-        return response
 
     def get_queryset(self):
         user = self.request.user
@@ -167,12 +161,22 @@ class IncidenteDetailView(RolRequeridoMixin, DetailView):
     template_name = 'incidents/incident_detail.html'
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
+        
         # Verificación de especialista asignado
         if request.user.groups.filter(name='Especialista').exists():
             incidente = self.get_object()
             if incidente.especialista_asignado != request.user.perfil_persona:
                 return redirect('acceso-denegado')
-        # Deshabilitar caché del navegador
+        
+        # Verificación de Alta Gerencia
+        if request.user.groups.filter(name='Alta Gerencia').exists():
+            incidente = self.get_object()
+            from base.utils import get_areas_supervision
+            areas = get_areas_supervision(request.user.perfil_persona)
+            if incidente.area_afectada not in areas:
+                return redirect('acceso-denegado')
+        
+        # Deshabilitar caché
         response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
         response['Pragma'] = 'no-cache'
         response['Expires'] = '0'

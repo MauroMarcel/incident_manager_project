@@ -7,7 +7,12 @@ class PersonaForm(forms.ModelForm):
     password1 = forms.CharField(widget=forms.PasswordInput(attrs={'autocomplete': 'new-password'}), required=False, label='Contraseña')
     password2 = forms.CharField(widget=forms.PasswordInput(attrs={'autocomplete': 'new-password'}), required=False, label='Confirmar contraseña')
     rol = forms.ModelChoiceField(queryset=Group.objects.all(), required=False, label='Rol')
-
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['jefe_directo'].queryset = Persona.objects.filter(
+            active=True
+        )
     class Meta:
         model = Persona
         fields = [

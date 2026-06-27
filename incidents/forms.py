@@ -9,8 +9,10 @@ class IncidenteForm(forms.ModelForm):
     class Meta:
         model = Incidente
         fields = ['titulo', 'descripcion', 'area_afectada']
+    
 
 class IncidenteReporteOficialForm(forms.ModelForm):
+
     class Meta:
         model = Incidente
         fields = [
@@ -44,6 +46,10 @@ class IncidenteClasificacionInternaForm(forms.ModelForm):
             'involucrados': forms.CheckboxSelectMultiple(),
             'indicador_compromiso': forms.CheckboxSelectMultiple(),
         }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['involucrados'].queryset = Persona.objects.filter(active=True)
+
 
 class IncidenteTemporalidadForm(forms.ModelForm):
     class Meta:

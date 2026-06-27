@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container mt-4">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show container mt-3" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
             <h4>{{ persona.nombre }} {{ persona.apellidos }}</h4>
@@ -21,13 +29,33 @@
                 {% endif %}
             </p>
             {% if persona.active %}
-                <form method="POST" action="{% url 'persona-eliminar' persona.pk %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger mt-3"
-                            onclick="return confirm('¿Estás seguro? Esta acción desactivará a la persona y su usuario del sistema.')">
-                        Desactivar Persona
-                    </button>
-                </form>
+                <!-- Botón que abre el modal -->
+                <button type="button" class="btn btn-danger mt-3" 
+                        data-bs-toggle="modal" data-bs-target="#modalDesactivar">
+                    Desactivar Persona
+                </button>
+                
+                <!-- Modal de confirmación -->
+                <div class="modal fade" id="modalDesactivar">
+                    <div class="modal-dialog modal-sm">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Desactivar Persona</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>¿Estás seguro? Esta acción desactivará a <strong>{{ persona }}</strong> y su usuario del sistema.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <form method="POST" action="{% url 'persona-eliminar' persona.pk %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">Desactivar</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             {% else %}
                 <form method="POST" action="{% url 'persona-activar' persona.pk %}">
                     {% csrf_token %}
