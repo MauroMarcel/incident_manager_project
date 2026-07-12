@@ -1,38 +1,107 @@
 {% extends "base.html" %}
-
 {% block content %}
-    <h2>Notificaciones</h2>
-    <div class="notifications-container">
-        {% if request.user.is_authenticated %}
-        <div class="mb-3">
-            <a href="{% url 'notification-create' %}" class="btn btn-primary">
-                Nueva Notificación
-            </a>
-        </div>
-        {% endif %}
-        <!-- Formulario de filtros -->
+<div class="sgic-page-header">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
         <div>
-            <form method="GET" class="mb-4">
-                {{ filterset.form.as_p }}
-                <button type="submit" class="btn btn-primary">Filtrar</button>
-                <a href="{% url 'notification-list' %}" class="btn btn-secondary">Limpiar</a>
-            </form>
+            <h1>Notificaciones</h1>
+            <p>Gestion de notificaciones del sistema</p>
         </div>
-        
-        {% for notificacion in object_list %}
-            <div class="notification">
-                <h3>{{ notificacion.asunto }}</h3>
-                <p><strong>Descripcion: </strong>{{ notificacion.descripcion }}</p>
-                <p><strong>Estado de la Notificacion: </strong>{{ notificacion.estado_notificacion }}</p>
-                <p><strong>Notificado por: </strong>{{ notificacion.usuario_notificador }}</p>
-                <span class="timestamp"><strong>Fecha de reporte: </strong>{{ notificacion.fecha_notificacion }}</span>
-                <div class="d-flex gap-2 mt-2">
-                    <a href="{% url 'notification-detail' notificacion.pk %}" class="btn btn-primary mt-2">Ver Detalles</a>
-                </div>
-                
-            </div>
-        {% empty %}
-            <p>No notifications available.</p>
-        {% endfor %}
+        <a href="{% url 'notification-create' %}" class="sgic-btn sgic-btn-primary">+ Nueva Notificacion</a>
     </div>
+</div>
+
+<form method="GET" id="searchForm">
+    <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
+        <div style="flex:1;min-width:240px;display:flex;gap:8px;">
+            <input type="text" name="q" value="{{ q }}" class="sgic-form-control" placeholder="Buscar notificaciones por asunto..." style="flex:1;padding:10px 14px;font-size:0.9rem;">
+            <button type="submit" class="sgic-btn sgic-btn-primary sgic-btn-sm">Buscar</button>
+            {% if q or request.GET.estado_notificacion or request.GET.area_notificacion or request.GET.fecha_notificacion__date__gte %}
+            <a href="{% url 'notification-list' %}" class="sgic-btn sgic-btn-secondary sgic-btn-sm">Limpiar</a>
+            {% endif %}
+        </div>
+        <span style="font-size:0.85rem;color:var(--sgic-text-secondary);white-space:nowrap;">
+            <strong>{{ object_list|length }}</strong> notificacion{{ object_list|length|pluralize:"es" }} encontrada{{ object_list|length|pluralize:"s" }}
+        </span>
+    </div>
+
+    <div class="sgic-card">
+        <div class="sgic-card-body" style="padding:0;">
+            <table class="sgic-table" id="notificationTable">
+                <thead>
+                    <tr>
+                        <th style="width:40%;vertical-align:middle;padding:12px 16px;">
+                            <span>Asunto</span>
+                        </th>
+                        {% if es_admin or es_supervisor or es_especialista or es_alta_gerencia %}
+                        <th style="width:12%;vertical-align:bottom;padding:12px 16px 8px 16px;">
+                            <div>
+                                <div style="margin-bottom:2px;"><span>Fecha</span></div>
+                                <input type="date" name="fecha_notificacion__date__gte" value="{{ request.GET.fecha_notificacion__date__gte|default:'' }}" style="width:100%;padding:4px 6px;font-size:0.75rem;border:1px solid var(--sgic-border);border-radius:4px;box-sizing:border-box;" onchange="this.form.submit()">
+                            </div>
+                        </th>
+                        <th style="width:14%;vertical-align:bottom;padding:12px 16px 8px 16px;">
+                            <div>
+                                <div style="margin-bottom:2px;"><span>Estado</span></div>
+                                <select name="estado_notificacion" style="width:100%;padding:4px 6px;font-size:0.75rem;border:1px solid var(--sgic-border);border-radius:4px;" onchange="this.form.submit()">
+                                    <option value="">Todos</option>
+                                    {% for choice in filterset.form.estado_notificacion.field.queryset %}
+                                    <option value="{{ choice.pk }}" {% if request.GET.estado_notificacion == choice.pk|stringformat:"s" %}selected{% endif %}>{{ choice }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </th>
+                        <th style="width:16%;vertical-align:bottom;padding:12px 16px 8px 16px;">
+                            <div>
+                                <div style="margin-bottom:2px;"><span>Area</span></div>
+                                <select name="area_notificacion" style="width:100%;padding:4px 6px;font-size:0.75rem;border:1px solid var(--sgic-border);border-radius:4px;" onchange="this.form.submit()">
+                                    <option value="">Todas</option>
+                                    {% for choice in filterset.form.area_notificacion.field.queryset %}
+                                    <option value="{{ choice.pk }}" {% if request.GET.area_notificacion == choice.pk|stringformat:"s" %}selected{% endif %}>{{ choice }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </th>
+                        {% else %}
+                        <th style="width:12%;vertical-align:middle;padding:12px 16px;"><span>Fecha</span></th>
+                        <th style="width:14%;vertical-align:middle;padding:12px 16px;"><span>Estado</span></th>
+                        <th style="width:16%;vertical-align:middle;padding:12px 16px;"><span>Area</span></th>
+                        {% endif %}
+                        <th style="width:90px;padding:12px 16px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for n in object_list %}
+                    <tr>
+                        <td>
+                            <strong>{{ n.asunto|truncatechars:60 }}</strong>
+                        </td>
+                        <td>{{ n.fecha_notificacion|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            {% with estado=n.estado_notificacion %}
+                                {% if estado.code == 'PEN' %}
+                                    <span class="sgic-badge sgic-badge-warning">{{ estado.name }}</span>
+                                {% elif estado.code == 'REC' %}
+                                    <span class="sgic-badge sgic-badge-danger">{{ estado.name }}</span>
+                                {% elif estado.code == 'ACE' %}
+                                    <span class="sgic-badge sgic-badge-success">{{ estado.name }}</span>
+                                {% else %}
+                                    <span class="sgic-badge sgic-badge-info">{{ estado.name }}</span>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td style="font-size:0.85rem;color:var(--sgic-text-secondary);">{{ n.area_notificacion }}</td>
+                        <td>
+                            <a href="{% url 'notification-detail' n.pk %}" class="sgic-btn sgic-btn-sm sgic-btn-outline">Ver</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted" style="padding:40px;">No hay notificaciones registradas.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</form>
 {% endblock %}

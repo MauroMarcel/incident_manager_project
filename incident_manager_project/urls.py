@@ -3,9 +3,11 @@ from django.urls import path, include
 from base import views as base_views
 from django.conf import settings
 from django.conf.urls.static import static
+from base.views import CustomLoginView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('accounts/login/', CustomLoginView.as_view(), name='login'),
     path('accounts/', include('django.contrib.auth.urls')),
     path('logout/', base_views.custom_logout, name='custom-logout'),
     path('', include('base.urls')),
@@ -14,4 +16,5 @@ urlpatterns = [
     path('indicadores/', include('IoC.urls')),
     path('personas/', include('users.urls')),
     path('organizacion/', include('organization.urls')),
+    path('reportes/', include('reports.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

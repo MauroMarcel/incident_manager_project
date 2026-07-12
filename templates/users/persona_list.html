@@ -1,72 +1,96 @@
 {% extends "base.html" %}
-
 {% block content %}
-    <h2>Personas</h2>
-
-    <div class="personas-container">
-        <div class="mb-3">
-            <a href="{% url 'persona-crear' %}" class="btn btn-primary">
-                Nueva Persona
-            </a>
+<div class="sgic-page-header">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div>
+            <h1>Personas</h1>
+            <p>Gestion de personas del sistema</p>
         </div>
-        <div class="mb-3 d-flex gap-2">
-            <a href="{% url 'persona-lista' %}?mostrar=activas" 
-            class="btn {% if mostrar == 'activas' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                Personas Activas
-            </a>
-            <a href="{% url 'persona-lista' %}?mostrar=inactivas" 
-            class="btn {% if mostrar == 'inactivas' %}btn-danger{% else %}btn-outline-danger{% endif %}">
-                Personas Inactivas
-            </a>
-        </div>
-        {% for persona in object_list %}
-            <div class="persona-card">
-                <h3>{{ persona.nombre }} {{ persona.apellidos }}</h3>
-
-                <p><strong>Identificador interno:</strong> {{ persona.identificador_interno }}</p>
-
-                {% if persona.email %}
-                    <p><strong>Email:</strong> {{ persona.email }}</p>
-                {% endif %}
-
-                {% if persona.categoria_persona %}
-                    <p><strong>Categoría:</strong> {{ persona.categoria_persona }}</p>
-                {% endif %}
-
-                {% if persona.cargo %}
-                    <p><strong>Cargo:</strong> {{ persona.cargo }}</p>
-                {% endif %}
-
-                {% if persona.area %}
-                    <p><strong>Área:</strong> {{ persona.area }}</p>
-                {% endif %}
-
-                {% if persona.estado_persona %}
-                    <p><strong>Estado:</strong> {{ persona.estado_persona }}</p>
-                {% endif %}
-
-                {% if persona.jefe_directo %}
-                    <p><strong>Jefe directo:</strong> {{ persona.jefe_directo }}</p>
-                {% endif %}
-
-                <span class="timestamp">
-                    <strong>Fecha de ingreso:</strong> {{ persona.fecha_ingreso }}
-                    {% if persona.fecha_baja %}
-                        &nbsp;|&nbsp;
-                        <strong>Fecha de baja:</strong> {{ persona.fecha_baja }}
-                    {% endif %}
-                </span>
-
-                <div class="d-flex gap-2 mt-2">
-                    <a href="{% url 'persona-detalle' persona.pk %}" class="btn btn-primary mt-2">
-                        Ver detalles
-                    </a>
-                </div>
-            </div>
-
-        {% empty %}
-            <p>No hay personas registradas.</p>
-        {% endfor %}
-
+        <a href="{% url 'persona-crear' %}" class="sgic-btn sgic-btn-primary">+ Nueva Persona</a>
     </div>
+</div>
+
+<form method="GET" id="searchForm">
+    <input type="hidden" name="mostrar" value="{{ mostrar }}">
+    <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
+        <div style="flex:1;min-width:240px;display:flex;gap:8px;">
+            <input type="text" name="q" value="{{ q }}" class="sgic-form-control" placeholder="Busca por nombre o por el nombre de usuario" style="flex:1;padding:10px 14px;font-size:0.9rem;">
+            <button type="submit" class="sgic-btn sgic-btn-primary sgic-btn-sm">Buscar</button>
+            {% if q or request.GET.area or request.GET.cargo %}
+            <a href="{% url 'persona-lista' %}?mostrar={{ mostrar }}" class="sgic-btn sgic-btn-secondary sgic-btn-sm">Limpiar</a>
+            {% endif %}
+        </div>
+        <span style="font-size:0.85rem;color:var(--sgic-text-secondary);white-space:nowrap;">
+            <strong>{{ object_list|length }}</strong> persona{{ object_list|length|pluralize:"s" }} encontrada{{ object_list|length|pluralize:"s" }}
+        </span>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
+        <button type="submit" name="mostrar" value="activas" class="sgic-btn {% if mostrar == 'activas' %}sgic-btn-primary{% else %}sgic-btn-outline{% endif %}">Personas Activas</button>
+        <button type="submit" name="mostrar" value="inactivas" class="sgic-btn {% if mostrar == 'inactivas' %}sgic-btn-danger{% else %}sgic-btn-outline{% endif %}">Personas Inactivas</button>
+    </div>
+
+    <div class="sgic-card">
+        <div class="sgic-card-body" style="padding:0;">
+            <table class="sgic-table" id="personaTable">
+                <thead>
+                    <tr>
+                        <th style="width:12%;">Identificador</th>
+                        <th style="width:20%;">Nombre</th>
+                        <th style="width:18%;">Email</th>
+                        <th style="width:14%;">
+                            <div style="display:flex;flex-direction:column;gap:4px;height:52px;justify-content:space-between;">
+                                <span>Area</span>
+                                <select name="area" style="padding:4px 6px;font-size:0.75rem;border:1px solid var(--sgic-border);border-radius:4px;" onchange="this.form.submit()">
+                                    <option value="">Todas</option>
+                                    {% for area in areas %}
+                                    <option value="{{ area.pk }}" {% if selected_area == area.pk|stringformat:"s" %}selected{% endif %}>{{ area }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </th>
+                        <th style="width:12%;">
+                            <div style="display:flex;flex-direction:column;gap:4px;height:52px;justify-content:space-between;">
+                                <span>Cargo</span>
+                                <select name="cargo" style="padding:4px 6px;font-size:0.75rem;border:1px solid var(--sgic-border);border-radius:4px;" onchange="this.form.submit()">
+                                    <option value="">Todos</option>
+                                    {% for cargo in cargos %}
+                                    <option value="{{ cargo.pk }}" {% if selected_cargo == cargo.pk|stringformat:"s" %}selected{% endif %}>{{ cargo }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </th>
+                        <th style="width:10%;">Estado</th>
+                        <th style="width:90px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for persona in object_list %}
+                    <tr>
+                        <td style="font-size:0.95rem;"><strong>{{ persona.identificador_interno }}</strong></td>
+                        <td><strong>{{ persona.nombre }} {{ persona.apellidos }}</strong></td>
+                        <td style="font-size:0.85rem;">{{ persona.email|default:"—" }}</td>
+                        <td style="font-size:0.85rem;">{{ persona.area|default:"—" }}</td>
+                        <td style="font-size:0.85rem;">{{ persona.cargo.name|default:persona.cargo|default:"—" }}</td>
+                        <td>
+                            {% if persona.active %}
+                                <span class="sgic-badge sgic-badge-success">Activa</span>
+                            {% else %}
+                                <span class="sgic-badge sgic-badge-danger">Inactiva</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'persona-detalle' persona.pk %}" class="sgic-btn sgic-btn-sm sgic-btn-outline">Ver</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted" style="padding:40px;">No hay personas registradas.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</form>
 {% endblock %}

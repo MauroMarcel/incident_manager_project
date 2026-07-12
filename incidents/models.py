@@ -15,12 +15,10 @@ class Incidente(ModeloBase):
     codigo = models.CharField(max_length=20, unique=True, editable=False, null=False, blank=False)
     titulo = models.CharField(max_length=200, null=False, blank=False)
     descripcion = models.TextField(blank=False)
-    area_afectada = models.ForeignKey(
+    areas_afectadas = models.ManyToManyField(
         Area,
-        on_delete=models.PROTECT,
-        related_name='areas_afectadas_incidente',
-        null=False,
-        blank=False
+        related_name='incidentes_area',
+        blank=True
     )
 # ============================================================
 # REPORTE OFICIAL — RESOLUCIÓN 105/2025
@@ -170,6 +168,30 @@ class Incidente(ModeloBase):
     def __str__(self):
         return f"{self.codigo} - {self.titulo}"
 
+
+
+class MensajeIncidente(models.Model):
+    incidente = models.ForeignKey(
+        Incidente,
+        on_delete=models.CASCADE,
+        related_name='mensajes'
+    )
+    remitente = models.ForeignKey(
+        Persona,
+        on_delete=models.PROTECT,
+        related_name='mensajes_incidente'
+    )
+    contenido = models.TextField()
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    leido = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Mensaje del incidente"
+        verbose_name_plural = "Mensajes del incidente"
+        ordering = ['fecha_creacion']
+
+    def __str__(self):
+        return f"[{self.incidente.codigo}] {self.remitente} - {self.fecha_creacion.strftime('%d/%m/%Y %H:%M')}"
 
 
 class Evidencia_Incidente(ModeloBase):

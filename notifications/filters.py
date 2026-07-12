@@ -26,7 +26,7 @@ class NotificacionFilter(django_filters.FilterSet):
     class Meta:
         model = Notificacion
         fields = {
-            'asunto': ['exact'],
+            'asunto': ['icontains'],
             'estado_notificacion': ['exact'],
             'area_notificacion': ['exact'],
             'incidente_asociado': ['exact']

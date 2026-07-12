@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="margin-bottom:24px;">
+    <a href="{% url 'home' %}" class="sgic-btn sgic-btn-secondary" style="padding:12px 28px;font-size:0.95rem;">&larr; Volver al inicio</a>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="sgic-alert sgic-alert-{{ message.tags }}" style="margin-bottom:16px;">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
+<div class="sgic-card">
+    <div class="sgic-card-header">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div class="card-header-accent" style="background:var(--sgic-accent);"></div>
+            <div>
+                <h5 style="margin:0;font-size:1.05rem;font-weight:600;">{{ persona.nombre }} {{ persona.apellidos }}</h5>
+                <small style="color:var(--sgic-text-secondary);font-size:0.9rem;font-weight:600;">{{ persona.identificador_interno }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="sgic-card-body">
+        <div class="sgic-detail-section">
+            <h5>Informacion General</h5>
+            <div class="sgic-detail-row">
+                <span class="detail-label">Email</span>
+                <span class="detail-value">{{ persona.email|default:"—" }}</span>
+            </div>
+            <div class="sgic-detail-row">
+                <span class="detail-label">Area</span>
+                <span class="detail-value">{{ persona.area|default:"—" }}</span>
+            </div>
+            <div class="sgic-detail-row">
+                <span class="detail-label">Cargo</span>
+                <span class="detail-value">{{ persona.cargo.name|default:persona.cargo|default:"—" }}</span>
+            </div>
+            <div class="sgic-detail-row">
+                <span class="detail-label">Categoria</span>
+                <span class="detail-value">{{ persona.categoria_persona.name|default:persona.categoria_persona|default:"—" }}</span>
+            </div>
+            <div class="sgic-detail-row">
+                <span class="detail-label">Jefe directo</span>
+                <span class="detail-value">{{ persona.jefe_directo.nombre|default:"" }} {{ persona.jefe_directo.apellidos|default:"—" }}</span>
+            </div>
+            <div class="sgic-detail-row">
+                <span class="detail-label">Usuario del sistema</span>
+                <span class="detail-value">
+                    {% if persona.usuario_django %}
+                        Si — <strong>{{ persona.usuario_django.username }}</strong>
+                    {% else %}
+                        No
+                    {% endif %}
+                </span>
+            </div>
+            <div class="sgic-detail-row">
+                <span class="detail-label">Fecha de ingreso</span>
+                <span class="detail-value">{{ persona.fecha_ingreso }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

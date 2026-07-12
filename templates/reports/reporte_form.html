@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Nuevo Reporte{% endblock %}
+{% block content %}
+{% if messages %}
+    {% for message in messages %}
+        <div class="sgic-alert sgic-alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
+<div class="row justify-content-center" style="margin-top:16px;">
+    <div class="col-lg-8 col-xl-7">
+        <div class="sgic-card">
+            <div class="sgic-card-header">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div class="card-header-accent" style="background:var(--sgic-accent);"></div>
+                    <h5 style="margin:0;font-size:1.05rem;font-weight:600;">Nuevo Reporte</h5>
+                </div>
+            </div>
+            <div class="sgic-card-body">
+                <form method="POST" novalidate>
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="sgic-form-group">
+                        <label for="{{ field.id_for_label }}" style="font-weight:600;font-size:0.9rem;color:var(--sgic-text);margin-bottom:6px;display:block;">
+                            {{ field.label }}{% if field.field.required %} <span style="color:var(--sgic-danger);">*</span>{% endif %}
+                        </label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <small style="color:var(--sgic-text-light);font-size:0.8rem;display:block;margin-top:4px;">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% if field.errors %}
+                            <div style="color:var(--sgic-danger);font-size:0.85rem;margin-top:4px;">{{ field.errors }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    <div style="display:flex;gap:10px;margin-top:24px;padding-top:16px;border-top:1px solid var(--sgic-border);">
+                        <button type="submit" class="sgic-btn sgic-btn-primary" style="padding:10px 28px;font-weight:500;">Generar Reporte</button>
+                        <a href="{% url 'reporte-home' %}" class="sgic-btn sgic-btn-secondary" style="padding:10px 28px;">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

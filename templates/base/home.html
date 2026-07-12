@@ -1,5 +1,80 @@
 {% extends 'base.html' %}
-{% block title %}Inicio{% endblock %}
+{% load static %}
+{% block title %}Inicio — SGIC{% endblock %}
 {% block content %}
-    <h2>Bienvenido al Sistema Gestor de Incidentes</h2>
+<div class="sgic-page-header">
+    <h1>Bienvenido, {{ user.username }}</h1>
+    <p>Sistema Gestor de Incidentes de Ciberseguridad</p>
+</div>
+
+<div class="sgic-dashboard-stats">
+    <a href="{% url 'incidente-lista' %}" class="sgic-stat-card" style="text-decoration:none;color:inherit;cursor:pointer;">
+        <div class="stat-icon" style="background:rgba(25,118,210,0.1);color:var(--sgic-accent);">⚠️</div>
+        <div class="stat-value">{{ incidentes_activos }}</div>
+        <div class="stat-label">
+            {% if es_especialista %}Mis Incidentes Activos
+            {% elif es_gerencia %}Incidentes en supervisión
+            {% else %}Incidentes Activos{% endif %}
+        </div>
+    </a>
+    <a href="{% url 'notification-list' %}" class="sgic-stat-card" style="text-decoration:none;color:inherit;cursor:pointer;">
+        <div class="stat-icon" style="background:rgba(46,125,50,0.1);color:var(--sgic-success);">🔔</div>
+        <div class="stat-value">{{ notificaciones_pendientes }}</div>
+        <div class="stat-label">
+            {% if es_especialista or es_usuario %}Mis Notificaciones
+            {% else %}Notificaciones Pendientes{% endif %}
+        </div>
+    </a>
+    <a href="{% url 'ioc-lista' %}" class="sgic-stat-card" style="text-decoration:none;color:inherit;cursor:pointer;">
+        <div class="stat-icon" style="background:rgba(2,136,209,0.1);color:var(--sgic-info);">🔍</div>
+        <div class="stat-value">{{ total_iocs }}</div>
+        <div class="stat-label">Indicadores (IoCs)</div>
+    </a>
+    {% if es_admin or es_gerencia %}
+    <a href="{% url 'persona-lista' %}" class="sgic-stat-card" style="text-decoration:none;color:inherit;cursor:pointer;">
+    {% else %}
+    <div class="sgic-stat-card">
+    {% endif %}
+        <div class="stat-icon" style="background:rgba(237,108,2,0.1);color:var(--sgic-warning);">👥</div>
+        <div class="stat-value">{{ total_personas }}</div>
+        <div class="stat-label">
+            {% if es_gerencia %}Personas en supervisión
+            {% elif es_admin %}Usuarios del Sistema
+            {% else %}Total Personas{% endif %}
+        </div>
+    {% if es_admin or es_gerencia %}
+    </a>
+    {% else %}
+    </div>
+    {% endif %}
+</div>
+
+<div class="sgic-card">
+    <div class="sgic-card-header">
+        <div style="display:flex;align-items:center;">
+            <div class="card-header-accent" style="background:var(--sgic-primary-light);"></div>
+            <h5>Informacion del Sistema</h5>
+        </div>
+    </div>
+    <div class="sgic-card-body">
+        <div class="sgic-detail-row">
+            <span class="detail-label">Version</span>
+            <span class="detail-value">1.0.0</span>
+        </div>
+        <div class="sgic-detail-row">
+            <span class="detail-label">Rol Actual</span>
+            <span class="detail-value">
+                {% if es_admin %}Administrador
+                {% elif es_supervisor %}Supervisor
+                {% elif es_especialista %}Especialista
+                {% elif es_alta_gerencia %}Alta Gerencia
+                {% else %}Usuario{% endif %}
+            </span>
+        </div>
+        <div class="sgic-detail-row">
+            <span class="detail-label">Normativa</span>
+            <span class="detail-value">Resolucion 105/2025</span>
+        </div>
+    </div>
+</div>
 {% endblock %}

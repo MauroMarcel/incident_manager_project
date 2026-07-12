@@ -1,75 +1,173 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container mt-4">
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show container mt-3" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+<div style="margin-bottom:24px;">
+    <a href="{% url 'persona-lista' %}" class="sgic-btn sgic-btn-secondary" style="padding:12px 28px;font-size:0.95rem;">&larr; Volver al listado</a>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="sgic-alert sgic-alert-{{ message.tags }}" style="margin-bottom:16px;">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
+<div class="sgic-card">
+    <div class="sgic-card-header">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div class="card-header-accent" style="background:var(--sgic-accent);"></div>
+            <div>
+                <h5 style="margin:0;font-size:1.05rem;font-weight:600;">{{ persona.nombre }} {{ persona.apellidos }}</h5>
+                <small style="color:var(--sgic-text-secondary);font-size:0.9rem;font-weight:600;">{{ persona.identificador_interno }}</small>
             </div>
-        {% endfor %}
-    {% endif %}
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h4>{{ persona.nombre }} {{ persona.apellidos }}</h4>
         </div>
-        <div class="card-body">
-            <p><strong>Identificador:</strong> {{ persona.identificador_interno }}</p>
-            <p><strong>Email:</strong> {{ persona.email|default:"—" }}</p>
-            <p><strong>Área:</strong> {{ persona.area|default:"—" }}</p>
-            <p><strong>Cargo:</strong> {{ persona.cargo|default:"—" }}</p>
-            <p><strong>Categoría:</strong> {{ persona.categoria_persona|default:"—" }}</p>
-            <p><strong>Estado:</strong> {{ persona.estado_persona|default:"—" }}</p>
-            <p><strong>Jefe directo:</strong> {{ persona.jefe_directo|default:"—" }}</p>
-            <p><strong>Usuario del sistema:</strong> 
-                {% if persona.usuario_django %}
-                    Sí — El usuario <strong>{{ persona.usuario_django.username }}</strong> está registrado 
-                {% else %}
-                    No
-                {% endif %}
-            </p>
+        <div>
             {% if persona.active %}
-                <!-- Botón que abre el modal -->
-                <button type="button" class="btn btn-danger mt-3" 
-                        data-bs-toggle="modal" data-bs-target="#modalDesactivar">
-                    Desactivar Persona
-                </button>
-                
-                <!-- Modal de confirmación -->
-                <div class="modal fade" id="modalDesactivar">
-                    <div class="modal-dialog modal-sm">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Desactivar Persona</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <p>¿Estás seguro? Esta acción desactivará a <strong>{{ persona }}</strong> y su usuario del sistema.</p>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                <form method="POST" action="{% url 'persona-eliminar' persona.pk %}">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-danger">Desactivar</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
+                <span class="sgic-badge sgic-badge-success" style="font-size:0.85rem;">Activa</span>
+            {% else %}
+                <span class="sgic-badge sgic-badge-danger" style="font-size:0.85rem;">Inactiva</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="sgic-card-body">
+        <div class="sgic-detail-section">
+            <h5>Informacion General</h5>
+            <div class="sgic-detail-row">
+                <span class="detail-label">Email</span>
+                <span class="detail-value">{{ persona.email|default:"—" }}</span>
+            </div>
+            <div class="sgic-detail-row">
+                <span class="detail-label">Area</span>
+                <span class="detail-value">{{ persona.area|default:"—" }}</span>
+            </div>
+            <div class="sgic-detail-row">
+                <span class="detail-label">Cargo</span>
+                <span class="detail-value">{{ persona.cargo.name|default:persona.cargo|default:"—" }}</span>
+            </div>
+            <div class="sgic-detail-row">
+                <span class="detail-label">Categoria</span>
+                <span class="detail-value">{{ persona.categoria_persona.name|default:persona.categoria_persona|default:"—" }}</span>
+            </div>
+            <div class="sgic-detail-row">
+                <span class="detail-label">Estado</span>
+                <span class="detail-value">{{ persona.estado_persona.name|default:persona.estado_persona|default:"—" }}</span>
+            </div>
+            <div class="sgic-detail-row">
+                <span class="detail-label">Jefe directo</span>
+                <span class="detail-value">{{ persona.jefe_directo|default:"—" }}</span>
+            </div>
+            <div class="sgic-detail-row">
+                <span class="detail-label">Usuario del sistema</span>
+                <span class="detail-value">
+                    {% if persona.usuario_django %}
+                        Si — <strong>{{ persona.usuario_django.username }}</strong>
+                    {% else %}
+                        No
+                    {% endif %}
+                </span>
+            </div>
+            {% if not persona.active and persona.fecha_baja %}
+            <div class="sgic-detail-row">
+                <span class="detail-label">Fecha de baja</span>
+                <span class="detail-value">{{ persona.fecha_baja }}</span>
+            </div>
+            {% endif %}
+            <div class="sgic-detail-row">
+                <span class="detail-label">Fecha de ingreso</span>
+                <span class="detail-value">{{ persona.fecha_ingreso }}</span>
+            </div>
+        </div>
+
+        {% if casos_activos is not None %}
+        <div class="sgic-detail-section">
+            <h5>Estadísticas como Especialista</h5>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                <div style="flex:1;min-width:120px;padding:16px;background:rgba(0,0,0,0.03);border-radius:var(--sgic-radius);border:1px solid var(--sgic-border);text-align:center;">
+                    <div style="font-size:1.8rem;font-weight:700;color:var(--sgic-text);">{{ total_casos }}</div>
+                    <div style="font-size:0.8rem;color:var(--sgic-text-light);margin-top:4px;">Total asignados</div>
                 </div>
+                <div style="flex:1;min-width:120px;padding:16px;background:rgba(25,118,210,0.06);border-radius:var(--sgic-radius);border:1px solid rgba(25,118,210,0.15);text-align:center;">
+                    <div style="font-size:1.8rem;font-weight:700;color:var(--sgic-accent);">{{ casos_activos }}</div>
+                    <div style="font-size:0.8rem;color:var(--sgic-text-light);margin-top:4px;">Casos activos</div>
+                </div>
+                <div style="flex:1;min-width:120px;padding:16px;background:rgba(46,125,50,0.06);border-radius:var(--sgic-radius);border:1px solid rgba(46,125,50,0.15);text-align:center;">
+                    <div style="font-size:1.8rem;font-weight:700;color:var(--sgic-success);">{{ total_resueltos }}</div>
+                    <div style="font-size:0.8rem;color:var(--sgic-text-light);margin-top:4px;">Resueltos</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;padding-top:16px;border-top:1px solid var(--sgic-border);">
+            {% if persona.active %}
+                <a href="{% url 'persona-editar' persona.pk %}" class="sgic-btn sgic-btn-primary">Editar</a>
+                {% if not persona.usuario_django.is_superuser %}
+                <button data-bs-toggle="modal" data-bs-target="#modalDesactivar" class="sgic-btn sgic-btn-danger">Desactivar Persona</button>
+                {% endif %}
+                {% if persona.es_alta_gerencia %}
+                <button data-bs-toggle="modal" data-bs-target="#modalConfigurarAreas" class="sgic-btn sgic-btn-info">Configurar áreas de supervisión</button>
+                {% endif %}
             {% else %}
                 <form method="POST" action="{% url 'persona-activar' persona.pk %}">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-success mt-3">
-                        Reactivar Persona
-                    </button>
+                    <button type="submit" class="sgic-btn sgic-btn-success">Reactivar Persona</button>
                 </form>
             {% endif %}
-            <div class="d-flex gap-2 mt-3">
-                <a href="{% url 'persona-lista' %}" class="btn btn-secondary">
-                    Volver al listado
-                </a>
+        </div>
+    </div>
+</div>
+
+{% if persona.active and not persona.usuario_django.is_superuser %}
+<div class="modal fade" id="modalDesactivar">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Desactivar Persona</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Esta accion desactivara a <strong>{{ persona }}</strong> y su usuario del sistema.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="sgic-btn sgic-btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="POST" action="{% url 'persona-eliminar' persona.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="sgic-btn sgic-btn-danger">Desactivar</button>
+                </form>
             </div>
         </div>
     </div>
 </div>
+{% endif %}
+
+{% if persona.es_alta_gerencia %}
+<div class="modal fade" id="modalConfigurarAreas">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Configurar áreas de supervisión</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'persona-configurar-areas' persona.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>Selecciona las áreas que <strong>{{ persona.nombre }} {{ persona.apellidos }}</strong> podrá supervisar:</p>
+                    <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+                        {% for area in areas %}
+                        <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--sgic-border);border-radius:var(--sgic-radius);cursor:pointer;">
+                            <input type="checkbox" name="areas" value="{{ area.pk }}" {% if area in persona.config_gerencia.areas_supervision.all %}checked{% endif %}>
+                            <span>{{ area.nombre }}</span>
+                        </label>
+                        {% empty %}
+                        <p class="text-muted">No hay áreas disponibles.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="sgic-btn sgic-btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="sgic-btn sgic-btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

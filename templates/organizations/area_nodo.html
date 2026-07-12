@@ -1,27 +1,32 @@
+{% with subareas=area.subareas.all %}
 <li>
-    {% if request.user.perfil_persona.area == area %}
-        {% if es_alta_gerencia and area in request.user.perfil_persona.config_gerencia.areas_supervision.all %}
-            <strong style="color: #6f42c1;">{{ area.nombre }} ★◆ (Tu área y área supervisada)</strong>
-        {% else %}
-            <strong style="color: #0d6efd;">{{ area.nombre }} ★ (Tu área)</strong>
-        {% endif %}
-    {% elif es_alta_gerencia and area in request.user.perfil_persona.config_gerencia.areas_supervision.all %}
-        <strong style="color: #198754;">{{ area.nombre }} ◆ (Área supervisada)</strong>
-    {% else %}
-        {{ area.nombre }}
-    {% endif %}
-    
-    {% if es_admin %}
-        <a href="{% url 'area-crear' %}?parent={{ area.pk }}" class="btn btn-sm btn-outline-primary ms-2">
-            + Subárea
+    <div class="area-node">
+        <a href="{% url 'area-detalle' area.pk %}" class="area-link">
+            <span class="area-icon {% if depth == 0 %}root-icon{% elif subareas %}child-icon{% else %}leaf-icon{% endif %}">
+                {% if depth == 0 %}&#9733;{% elif subareas %}&#8862;{% else %}&#9679;{% endif %}
+            </span>
+            <span class="area-name">{{ area.nombre }}</span>
         </a>
-    {% endif %}
-    
-    {% if area.subareas.all %}
+
+        {% if request.user.perfil_persona.area == area and es_alta_gerencia and area in request.user.perfil_persona.config_gerencia.areas_supervision.all %}
+            <span class="area-badge both">&#9733; Tu &aacute;rea &amp; supervisada</span>
+        {% elif request.user.perfil_persona.area == area %}
+            <span class="area-badge my-area">&#9733; Tu &aacute;rea</span>
+        {% elif es_alta_gerencia and area in request.user.perfil_persona.config_gerencia.areas_supervision.all %}
+            <span class="area-badge supervised">&#9673; Supervisada</span>
+        {% endif %}
+
+        {% if es_admin %}
+            <a href="{% url 'area-crear' %}?parent={{ area.pk }}" class="btn-subarea">+ Sub&aacute;rea</a>
+        {% endif %}
+    </div>
+
+    {% if subareas %}
         <ul>
-            {% for subarea in area.subareas.all %}
-                {% include 'organizations/area_nodo.html' with area=subarea %}
+            {% for subarea in subareas %}
+                {% include 'organizations/area_nodo.html' with area=subarea depth=depth|add:1 %}
             {% endfor %}
         </ul>
     {% endif %}
 </li>
+{% endwith %}

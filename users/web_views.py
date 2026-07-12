@@ -1,10 +1,12 @@
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.shortcuts import redirect, get_object_or_404
+from django.views import View
+from django.shortcuts import redirect, get_object_or_404, render
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
-from .models import Persona, Categoria_Persona, Cargo, Estado_Persona
+from .models import Persona, Categoria_Persona, Cargo, Estado_Persona, ConfiguracionAltaGerencia
+from organization.models import Area
 from .forms import (
     PersonaForm, Categoria_PersonaForm, CargoForm, Estado_PersonaForm
 )
@@ -258,31 +260,43 @@ class PersonaListView(LoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        queryset = Persona.objects.select_related( 'categoria_persona', 'cargo',
-            'estado_persona', 'nivel_privilegio'
+        queryset = Persona.objects.select_related('categoria_persona', 'cargo',
+            'estado_persona', 'area'
         )
-        search = self.request.GET.get('search')
-        active = self.request.GET.get('active')
+        q = self.request.GET.get('q', '').strip()
+        active = self.request.GET.get('mostrar')
+        area = self.request.GET.get('area')
+        cargo = self.request.GET.get('cargo')
         
-        if search:
+        if q:
             queryset = queryset.filter(
-                Q(nombre__icontains=search) |
-                Q(apellidos__icontains=search) |
-                Q(identificador_interno__icontains=search) |
-                Q(email__icontains=search)
+                Q(nombre__icontains=q) |
+                Q(apellidos__icontains=q) |
+                Q(identificador_interno__icontains=q) |
+                Q(email__icontains=q)
             )
         
-        if active == 'true':
+        if active == 'activas':
             queryset = queryset.filter(active=True)
-        elif active == 'false':
+        elif active == 'inactivas':
             queryset = queryset.filter(active=False)
+        
+        if area:
+            queryset = queryset.filter(area_id=area)
+        
+        if cargo:
+            queryset = queryset.filter(cargo_id=cargo)
         
         return queryset.order_by('apellidos', 'nombre')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['search'] = self.request.GET.get('search', '')
-        context['active_filter'] = self.request.GET.get('active', '')
+        context['q'] = self.request.GET.get('q', '')
+        context['mostrar'] = self.request.GET.get('mostrar', 'activas')
+        context['selected_area'] = self.request.GET.get('area', '')
+        context['selected_cargo'] = self.request.GET.get('cargo', '')
+        context['areas'] = Area.objects.all()
+        context['cargos'] = Cargo.objects.filter(active=True)
         return context
 
 
@@ -291,6 +305,11 @@ class PersonaDetailView(LoginRequiredMixin, DetailView):
     model = Persona
     template_name = 'users/persona_detail.html'
     context_object_name = 'persona'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['areas'] = Area.objects.all()
+        return context
 
 
 class PersonaCreateView(LoginRequiredMixin, CreateView):
@@ -332,3 +351,23 @@ class PersonaDeleteView(LoginRequiredMixin, DeleteView):
         response = super().delete(request, *args, **kwargs)
         messages.success(request, f'Persona "{nombre_completo}" eliminada exitosamente.')
         return response
+
+
+class PersonaConfigurarAreasView(LoginRequiredMixin, View):
+    """Vista para que Alta Gerencia asigne áreas de supervisión a un usuario"""
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='Alta Gerencia').exists():
+            return redirect('acceso-denegado')
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, pk):
+        persona = get_object_or_404(Persona, pk=pk)
+        config, _ = ConfiguracionAltaGerencia.objects.get_or_create(persona=persona)
+        area_ids = request.POST.getlist('areas')
+        config.areas_supervision.set(area_ids)
+        messages.success(
+            request,
+            f'Áreas de supervisión actualizadas para {persona.nombre} {persona.apellidos}.'
+        )
+        return redirect('persona-detalle', pk=pk)

@@ -1,22 +1,26 @@
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views import View
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 from django.urls import reverse_lazy
-from django.db.models import Q
+from django.shortcuts import get_object_or_404, redirect, render
 from .models import Incidente
 
-# ==================== TIPO_INCIDENTE VIEWS ====================
 
-# ==================== INCIDENTE VIEWS ====================
+class IncidenteDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.groups.filter(
+            name__in=['Administrador', 'Supervisor']
+        ).exists()
 
+    def get(self, request, pk):
+        incidente = get_object_or_404(Incidente, pk=pk, active=True)
+        return render(request, 'incidents/incidente_confirm_delete.html', {
+            'incidente': incidente
+        })
 
-class IncidenteDeleteView(LoginRequiredMixin, DeleteView):
-    model = Incidente
-    template_name = 'incidents/incidente_confirm_delete.html'
-    success_url = reverse_lazy('incidente-list')
-
-    def delete(self, request, *args, **kwargs):
-        codigo = self.get_object().codigo
-        response = super().delete(request, *args, **kwargs)
-        messages.success(request, f'Incidente "{codigo}" eliminado exitosamente.')
-        return response
+    def post(self, request, pk):
+        incidente = get_object_or_404(Incidente, pk=pk, active=True)
+        incidente.active = False
+        incidente.save()
+        messages.success(request, f'Incidente "{incidente.codigo}" eliminado lógicamente.')
+        return redirect('incidente-lista')

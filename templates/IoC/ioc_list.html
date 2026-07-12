@@ -1,34 +1,66 @@
 {% extends "base.html" %}
-
 {% block content %}
-    <h2>Indicadores de Compromiso (IoCs)</h2>
-
-    <div class="notifications-container">
-
-        {% for ioc in object_list %}
-            <div class="notification">
-                <h3>{{ ioc.tipo_ioc }}</h3>
-
-                <p><strong>Valor:</strong> {{ ioc.valor }}</p>
-
-                {% if ioc.descripcion %}
-                    <p><strong>Descripción:</strong> {{ ioc.descripcion }}</p>
-                {% endif %}
-
-                <span class="timestamp">
-                    <strong>Fecha de registro:</strong> {{ ioc.created }}
-                </span>
-
-                <div class="d-flex gap-2 mt-2">
-                    <a href="{% url 'ioc-detalle' ioc.pk %}" class="btn btn-primary mt-2">
-                        Ver Detalles
-                    </a>
-                </div>
-            </div>
-
-        {% empty %}
-            <p>No hay IoCs registrados.</p>
-        {% endfor %}
-
+<div class="sgic-page-header">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div>
+            <h1>Indicadores de Compromiso (IoCs)</h1>
+            <p>Gestion de indicadores de compromiso del sistema</p>
+        </div>
+        <a href="{% url 'ioc-crear' %}" class="sgic-btn sgic-btn-primary">+ Nuevo IoC</a>
     </div>
+</div>
+
+<form method="GET" id="searchForm">
+    <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
+        <div style="flex:1;min-width:240px;display:flex;gap:8px;">
+            <input type="text" name="valor" value="{{ request.GET.valor|default:'' }}" class="sgic-form-control" placeholder="Buscar por valor..." style="flex:1;padding:10px 14px;font-size:0.9rem;">
+            <button type="submit" class="sgic-btn sgic-btn-primary sgic-btn-sm">Buscar</button>
+            {% if request.GET.valor or request.GET.tipo_ioc %}
+            <a href="{% url 'ioc-lista' %}" class="sgic-btn sgic-btn-secondary sgic-btn-sm">Limpiar</a>
+            {% endif %}
+        </div>
+        <span style="font-size:0.85rem;color:var(--sgic-text-secondary);white-space:nowrap;">
+            <strong>{{ object_list|length }}</strong> IoC{{ object_list|length|pluralize:"s" }} encontrado{{ object_list|length|pluralize:"s" }}
+        </span>
+    </div>
+
+    <div class="sgic-card">
+        <div class="sgic-card-body" style="padding:0;">
+            <table class="sgic-table" id="iocTable">
+                <thead>
+                    <tr>
+                        <th>
+                            <span style="display:inline-flex;align-items:center;gap:8px;">
+                                <span>Tipo</span>
+                                <select name="tipo_ioc" style="padding:3px 5px;font-size:0.72rem;border:1px solid var(--sgic-border);border-radius:4px;" onchange="this.form.submit()">
+                                    <option value="">Todos</option>
+                                    {% for choice in filterset.form.tipo_ioc.field.queryset %}
+                                    <option value="{{ choice.pk }}" {% if request.GET.tipo_ioc == choice.pk|stringformat:"s" %}selected{% endif %}>{{ choice }}</option>
+                                    {% endfor %}
+                                </select>
+                            </span>
+                        </th>
+                        <th>Valor</th>
+                        <th style="width:90px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for ioc in object_list %}
+                <tr>
+                    <td style="font-size:0.95rem;">{{ ioc.tipo_ioc.name }}</td>
+                    <td><code style="font-size:0.95rem;">{{ ioc.valor }}</code></td>
+                    <td>
+                        <a href="{% url 'ioc-detalle' ioc.pk %}" class="sgic-btn sgic-btn-sm sgic-btn-outline">Ver</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center text-muted" style="padding:40px;">No hay IoCs registrados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</form>
 {% endblock %}

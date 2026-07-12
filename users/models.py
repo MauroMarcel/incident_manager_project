@@ -35,6 +35,10 @@ class Persona(ModeloBase):
         verbose_name_plural = "Personas"
         ordering = ['apellidos', 'nombre'] 
     
+    @property
+    def es_alta_gerencia(self):
+        return bool(self.usuario_django and self.usuario_django.groups.filter(name='Alta Gerencia').exists())
+
     def __str__(self):
         return f"{self.nombre} {self.apellidos} ({self.identificador_interno})"
 

@@ -1,58 +1,95 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">
-                Clasificar Incidente — Paso {{ paso }} de {{ total_pasos }}
-            </h4>
-            <!-- Barra de progreso -->
-            <div class="progress mt-2" style="height: 8px;">
-                <div class="progress-bar" style="width: {{ porcentaje }}%">
-
+<div class="row justify-content-center" style="margin-top:16px;">
+    <div class="col-lg-10">
+        <div class="sgic-card">
+            <div class="sgic-card-header">
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                    <div class="card-header-accent" style="background:var(--sgic-accent);"></div>
+                    <div style="flex:1;">
+                        <h5 style="margin:0;font-size:1.05rem;font-weight:600;">
+                            Clasificar Incidente — Paso {{ paso }} de {{ total_pasos }}
+                        </h5>
+                        {% if paso == '1' %}
+                            <div style="font-size:1.05rem;color:var(--sgic-text-secondary);">Reporte Oficial — Resoluci&oacute;n 105/2025</div>
+                        {% elif paso == '2' %}
+                            <div style="font-size:1.05rem;color:var(--sgic-text-secondary);">Clasificaci&oacute;n Interna</div>
+                        {% elif paso == '3' %}
+                            <div style="font-size:1.05rem;color:var(--sgic-text-secondary);">Temporalidad</div>
+                        {% endif %}
+                    </div>
+                    <div style="font-size:0.85rem;color:var(--sgic-text-secondary);font-weight:600;">{{ porcentaje }}%</div>
+                </div>
+                <div class="progress" style="height:6px;background:var(--sgic-bg);border-radius:3px;margin-top:8px;overflow:hidden;">
+                    <div style="width:{{ porcentaje }}%;height:100%;background:var(--sgic-accent);border-radius:3px;transition:width 0.3s;"></div>
                 </div>
             </div>
-        </div>
+            <div class="sgic-card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="sgic-form-group">
+                        <label for="{{ field.id_for_label }}" style="font-weight:600;font-size:0.9rem;color:var(--sgic-text);margin-bottom:6px;display:block;">
+                            {{ field.label }}{% if field.field.required %} <span style="color:var(--sgic-danger);">*</span>{% endif %}
+                        </label>
+                        {% if field.name == 'involucrados' %}
+                        <div id="{{ field.auto_id }}">
+                            {% for persona in field.field.queryset %}
+                            <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--sgic-border);border-radius:var(--sgic-radius);margin-bottom:4px;{% if not persona.active %}opacity:0.6;background:#f0f0f0;{% endif %}cursor:pointer;">
+                                <input type="checkbox" name="{{ field.html_name }}" value="{{ persona.pk }}"
+                                    {% if persona.pk|stringformat:"s" in field.value or persona.pk in field.value %}checked{% endif %}>
+                                <span>{{ persona }}</span>
+                                {% if not persona.active %}
+                                <span style="font-size:0.75rem;color:var(--sgic-danger);font-weight:600;">(inactivo)</span>
+                                {% endif %}
+                            </label>
+                            {% endfor %}
+                        </div>
+                        {% elif field.name == 'areas_afectadas' %}
+                        <input type="text" id="{{ field.auto_id }}_filter" placeholder="Filtrar áreas..." style="width:66%;padding:6px 10px;font-size:0.85rem;border:1px solid var(--sgic-border);border-radius:var(--sgic-radius);margin-bottom:8px;box-sizing:border-box;">
+                        <div id="{{ field.auto_id }}_grid">
+                            {{ field }}
+                        </div>
+                        <script>
+                        document.getElementById('{{ field.auto_id }}_filter').addEventListener('input', function(){
+                            var q = this.value.toLowerCase();
+                            document.querySelectorAll('#{{ field.auto_id }}_grid label').forEach(function(lbl){
+                                lbl.style.display = lbl.textContent.toLowerCase().includes(q) ? '' : 'none';
+                            });
+                        });
+                        </script>
+                        {% else %}
+                        {{ field }}
+                        {% endif %}
+                        {% if field.help_text %}
+                            <small style="color:var(--sgic-text-light);font-size:0.8rem;display:block;margin-top:4px;">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% if field.errors %}
+                            <div style="color:var(--sgic-danger);font-size:0.85rem;margin-top:4px;">{{ field.errors }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
 
-        <div class="card-body">
-            <!-- Título del paso actual -->
-            {% if paso == '1' %}
-                <h5>Reporte Oficial — Resolución 105/2025</h5>
-            {% elif paso == '2' %}
-                <h5>Clasificación Interna</h5>
-            {% elif paso == '3' %}
-                <h5>Temporalidad</h5>
-            {% endif %}
-
-            <form method="POST">
-                {% csrf_token %}
-                {{ form.as_p }}
-
-                <div class="d-flex gap-2 mt-3">
-                    <!-- Botón Anterior -->
-                    {% if paso != '1' %}
-                        <a href="{% url 'incidente-wizard' incidente.pk paso_anterior %}" class="btn btn-secondary">
-                            Anterior
-                        </a>
-                        {%else%}
-                            <a href="{% url 'incidente-lista' %}" class="btn btn-secondary">
-                                Volver al listado
-                            </a>
-                    {% endif %}
-
-                    <!-- Botón Siguiente o Guardar -->
-                    {% if paso == total_pasos|stringformat:'s' %}
-                        <button type="submit" class="btn btn-success">
-                            Guardar
-                        </button>
-                    {% else %}
-                        <button type="submit" class="btn btn-primary">
-                            Siguiente
-                        </button>
-                    {% endif %}
-                </div>
-            </form>
+                    <div style="display:flex;gap:10px;margin-top:24px;padding-top:16px;border-top:1px solid var(--sgic-border);">
+                        {% if paso != '1' %}
+                            <a href="{% url 'incidente-wizard' incidente.pk paso_anterior %}" class="sgic-btn sgic-btn-secondary" style="padding:10px 28px;">Anterior</a>
+                        {% else %}
+                            <a href="{% url 'incidente-detalle' incidente.pk %}" class="sgic-btn sgic-btn-secondary" style="padding:10px 28px;">Volver al detalle</a>
+                        {% endif %}
+                        {% if paso == total_pasos|stringformat:"s" %}
+                            <button type="submit" class="sgic-btn sgic-btn-success" style="padding:10px 28px;">Guardar</button>
+                        {% else %}
+                            <button type="submit" class="sgic-btn sgic-btn-primary" style="padding:10px 28px;">Siguiente</button>
+                        {% endif %}
+                    </div>
+                </form>
+                {% if paso == '2' %}
+                    <div class="sgic-alert sgic-alert-info mt-3" style="font-size:0.85rem;margin-top:16px;">
+                        <strong>Nota:</strong> Los usuarios con estado inactivo se muestran en un tono atenuado para diferenciarlos visualmente de los usuarios activos.
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>

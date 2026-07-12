@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Reportes Generados{% endblock %}
+{% block content %}
+<div class="sgic-page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+    <div>
+        <h1>Reportes Generados</h1>
+        <p>Todos los reportes creados en el sistema, agrupados por categor&iacute;a</p>
+    </div>
+    <a href="{% url 'reporte-crear' %}" class="sgic-btn sgic-btn-primary">+ Nuevo Reporte</a>
+</div>
+
+{% for key, grupo in grupos_reporte.items %}
+<div class="sgic-card" style="margin-bottom:20px;">
+    <div class="sgic-card-header">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div class="card-header-accent" style="background:var(--sgic-accent);"></div>
+            <h5 style="margin:0;font-size:1.05rem;font-weight:600;">{{ grupo.label }}</h5>
+            <span class="sgic-badge sgic-badge-primary">{{ grupo.reportes|length }}</span>
+        </div>
+    </div>
+    <div class="sgic-card-body" style="padding:0;">
+        <table class="sgic-table">
+            <thead>
+                <tr>
+                    <th>T&iacute;tulo</th>
+                    <th>Generado por</th>
+                    <th>Rango</th>
+                    <th>Fecha creaci&oacute;n</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reporte in grupo.reportes %}
+                <tr>
+                    <td><strong>{{ reporte.titulo }}</strong></td>
+                    <td>{{ reporte.generado_por|default:"Sistema" }}</td>
+                    <td>
+                        {% if reporte.fecha_inicio and reporte.fecha_fin %}
+                            {{ reporte.fecha_inicio|date:"d/m/Y" }} - {{ reporte.fecha_fin|date:"d/m/Y" }}
+                        {% else %}
+                            Sin filtro de fechas
+                        {% endif %}
+                    </td>
+                    <td>{{ reporte.created|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        <a href="{% url 'reporte-detalle' reporte.pk %}" class="sgic-btn sgic-btn-sm sgic-btn-primary">Ver</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted">No hay reportes en esta categor&iacute;a.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% empty %}
+<div class="sgic-card">
+    <div class="sgic-card-body" style="text-align:center;padding:60px 20px;">
+        <div style="font-size:3rem;margin-bottom:12px;opacity:0.3;">📊</div>
+        <p style="font-size:1rem;color:var(--sgic-text-secondary);margin:0;">No hay reportes generados.</p>
+        <a href="{% url 'reporte-crear' %}" class="sgic-btn sgic-btn-primary" style="margin-top:16px;">Crear primer reporte</a>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

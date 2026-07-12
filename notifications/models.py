@@ -11,16 +11,12 @@ class Notificacion(ModeloBase):
         , on_delete=models.PROTECT,
         related_name='usuarios_notificadores'
     )
-    asunto = models.ForeignKey(
-        Asunto_Notificacion,
-        on_delete=models.PROTECT, 
-        related_name='asuntos'
-        )
+    asunto = models.CharField(max_length=300)
     descripcion = models.TextField()
     fecha_notificacion = models.DateTimeField(auto_now_add=True, null=False)
 
-    
-    telefono = models.CharField(max_length=20, blank=True, null=True)
+    telefono = models.CharField(max_length=20, blank=True, null=True, verbose_name='Teléfono')
+    email = models.EmailField(blank=True, null=True)
     area_notificacion = models.ForeignKey(
         Area,
         on_delete=models.PROTECT, 

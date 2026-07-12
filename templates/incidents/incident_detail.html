@@ -2,231 +2,452 @@
 {% block content %}
 {% for message in messages %}
     {% if 'incidente' in message.tags %}
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+        <div class="sgic-alert sgic-alert-success">{{ message }}</div>
     {% endif %}
 {% endfor %}
-<div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-dark text-white">
-            <h4>{{ incidente.codigo }} — {{ incidente.titulo }}</h4>
+
+<div style="margin-bottom:24px;">
+    <a href="{% url 'incidente-lista' %}" class="sgic-btn sgic-btn-secondary" style="padding:12px 28px;font-size:0.95rem;">&larr; Volver al listado</a>
+</div>
+
+<div class="sgic-card">
+    <div class="sgic-card-header">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div class="card-header-accent" style="background:var(--sgic-accent);"></div>
+            <div>
+                <h4 style="margin:0;">{{ incidente.codigo }} — {{ incidente.titulo }}</h4>
+                <small style="color:var(--sgic-text-secondary);font-size:0.8rem;">
+                    Reportado el {{ incidente.fecha_reportado|date:"d/m/Y H:i" }}
+                </small>
+            </div>
         </div>
-        <div class="card-body">
-            <!-- INFORMACIÓN GENERAL -->
-            <h5>Información General</h5>
-            <p><strong>Área afectada:</strong> {{ incidente.area_afectada }}</p>
-            <p><strong>Reportado por:</strong> {{ incidente.supervisor }}</p>
-            <p><strong>Asignado a:</strong> 
-                {% if incidente.especialista_asignado %}
-                    {{ incidente.especialista_asignado }}
-                {% elif incidente.estado_incidente.code == 'RES' or incidente.estado_incidente.code == 'REC' %}
-                    Investigado por el supervisor
+        <div>
+            {% with estado=incidente.estado_incidente p=request.user.perfil_persona %}
+                {% if es_admin or es_supervisor and incidente.supervisor == p or es_especialista and incidente.especialista_asignado == p %}
+                <form method="POST" action="{% url 'incidente-cambiar-estado' incidente.pk %}" style="display:flex;align-items:center;gap:6px;">
+                    {% csrf_token %}
+                    <input type="hidden" name="mensaje_contenido" id="mensajeCierreInput">
+                    <span style="font-size:0.85rem;font-weight:600;">Estado:</span>
+                    <select name="estado" style="padding:4px 8px;font-size:0.85rem;border:1px solid var(--sgic-border);border-radius:var(--sgic-radius);background:var(--sgic-bg);color:var(--sgic-text);cursor:pointer;" onchange="cambiarEstado(this)">
+                        <option value="ASI" {% if estado.code == 'ASI' %}selected{% endif %}>Asignado</option>
+                        <option value="INV" {% if estado.code == 'INV' %}selected{% endif %}>Investigado</option>
+                        {% if not es_especialista %}
+                        <option value="CER" {% if estado.code == 'CER' %}selected{% endif %}>Cerrado</option>
+                        {% endif %}
+                    </select>
+                </form>
                 {% else %}
-                    Sin asignar
+                    {% if estado.code == 'ASI' %}
+                        <span class="sgic-badge sgic-badge-warning" style="font-size:0.85rem;">{{ estado.name }}</span>
+                    {% elif estado.code == 'INV' %}
+                        <span class="sgic-badge sgic-badge-primary" style="font-size:0.85rem;">{{ estado.name }}</span>
+                    {% elif estado.code == 'CER' %}
+                        <span class="sgic-badge sgic-badge-success" style="font-size:0.85rem;">{{ estado.name }}</span>
+                    {% else %}
+                        <span class="sgic-badge sgic-badge-info" style="font-size:0.85rem;">{{ estado.name }}</span>
+                    {% endif %}
                 {% endif %}
-            </p>
-            <p><strong>Estado:</strong> {{ incidente.estado_incidente }}</p>
-            <p><strong>Prioridad:</strong> {{ incidente.prioridad }}</p>
-            <hr>
+            {% endwith %}
+        </div>
+    </div>
+    <div class="sgic-card-body">
 
-            <!-- REPORTE OFICIAL -->
-            <h5>Reporte Oficial — Resolución 105/2025</h5>
-            <p><strong>Origen del incidente:</strong></p>
-            <p>{{ incidente.origen_incidente|linebreaks }}</p>
-            <p><strong>Descripción detallada:</strong></p>
-            <p>{{ incidente.descripcion|linebreaks }}</p>
-            <p><strong>Recursos afectados:</strong></p>
-            <p>{{ incidente.recursos_afectados|linebreaks }}</p>
-            <p><strong>Acciones / Contramedidas aplicadas:</strong></p>
-            <p>{{ incidente.contramedidas|linebreaks }}</p>
-            <p><strong>Otra información relevante:</strong></p>
-            <p>{{ incidente.otra_informacion|linebreaks }}</p>
-            <p><strong>Categoría:</strong> {{ incidente.subcategoria.categoria|default:"—" }}</p>
-            <p><strong>Subcategoría:</strong> {{ incidente.subcategoria|default:"—" }}</p>
-            <hr>
-
-            <!-- CLASIFICACIÓN INTERNA -->
-            <h5>Clasificación Interna</h5>
-            <p><strong>Tipo de incidente:</strong> {{ incidente.tipo_incidente }}</p>
-            <p><strong>Alcance:</strong> {{ incidente.alcance }}</p>
-            <p><strong>Vector de ataque:</strong> {{ incidente.vector_ataque }}</p>
-            <p><strong>Fuente de detección:</strong> {{ incidente.fuente_deteccion }}</p>
-            <p><strong>Tecnología involucrada:</strong> {{ incidente.tecnologia }}</p>
-            <p><strong>Sistema operativo:</strong> {{ incidente.sistema_operativo }}</p>
-            <p><strong>Involucrados:</strong></p>
-            <ul>
-                {% for persona in incidente.involucrados.all %}
-                    <li>{{ persona }}</li>
-                {% empty %}
-                    <li class="text-muted">Ninguno</li>
-                {% endfor %}
-            </ul>
-            <p><strong>Indicadores de Compromiso:</strong></p>
-            <ul>
-                {% for ioc in incidente.indicador_compromiso.all %}
-                    <li>{{ ioc.tipo_ioc }} — {{ ioc.valor }}</li>
-                {% empty %}
-                    <li class="text-muted">Ninguno</li>
-                {% endfor %}
-            </ul>
-            <hr>
-
-            <!-- TEMPORALIDAD -->
-            <h5>Temporalidad</h5>
-            <p><strong>Fecha de detección:</strong> {{ incidente.fecha_ocurrencia }}</p>
-            <p><strong>Fecha de reporte:</strong> {{ incidente.fecha_reportado }}</p>
-            <p><strong>Fecha de cierre:</strong> {{ incidente.fecha_solucion|default:"—" }}</p>
-            <hr>
-
-            <!-- NOTIFICACIONES ASOCIADAS -->
-            <h5>Notificaciones Asociadas</h5>
-            {% if incidente.notificaciones_incidente.all %}
-                <ul>
-                    {% for notificacion in incidente.notificaciones_incidente.all %}
-                        <li>
-                            {% if es_alta_gerencia %}
-                                {% with areas_supervision=request.user.perfil_persona.config_gerencia.areas_supervision.all %}
-                                    {% if notificacion.area_notificacion in areas_supervision %}
-                                        <a href="{% url 'notification-detail' notificacion.pk %}">
-                                            {{ notificacion.asunto }} — {{ notificacion.usuario_notificador }}
-                                        </a>
-                                    {% else %}
-                                        {{ notificacion.asunto }} — {{ notificacion.usuario_notificador }}
-                                        <span class="text-muted">(sin acceso)</span>
-                                    {% endif %}
-                                {% endwith %}
-                            {% else %}
-                                <a href="{% url 'notification-detail' notificacion.pk %}">
-                                    {{ notificacion.asunto }} — {{ notificacion.usuario_notificador }}
-                                </a>
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p class="text-muted">No existen notificaciones asociadas.</p>
+        <!-- Tabs -->
+        <ul class="nav nav-tabs sgic-tabs" id="detailTabs" role="tablist" style="margin-bottom:20px;border-bottom:2px solid var(--sgic-border);">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-general" data-bs-toggle="tab" data-bs-target="#section-general" type="button" role="tab" style="font-weight:600;font-size:0.9rem;padding:10px 18px;color:var(--sgic-text);border:none;border-bottom:2px solid transparent;margin-bottom:-2px;background:transparent;" aria-selected="true">Informaci&oacute;n General</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-reporte" data-bs-toggle="tab" data-bs-target="#section-reporte" type="button" role="tab" style="font-weight:600;font-size:0.9rem;padding:10px 18px;color:var(--sgic-text);border:none;border-bottom:2px solid transparent;margin-bottom:-2px;background:transparent;">Reporte Oficial</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-clasificacion" data-bs-toggle="tab" data-bs-target="#section-clasificacion" type="button" role="tab" style="font-weight:600;font-size:0.9rem;padding:10px 18px;color:var(--sgic-text);border:none;border-bottom:2px solid transparent;margin-bottom:-2px;background:transparent;">Clasificaci&oacute;n Interna</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-temporalidad" data-bs-toggle="tab" data-bs-target="#section-temporalidad" type="button" role="tab" style="font-weight:600;font-size:0.9rem;padding:10px 18px;color:var(--sgic-text);border:none;border-bottom:2px solid transparent;margin-bottom:-2px;background:transparent;">Temporalidad</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-notificaciones" data-bs-toggle="tab" data-bs-target="#section-notificaciones" type="button" role="tab" style="font-weight:600;font-size:0.9rem;padding:10px 18px;color:var(--sgic-text);border:none;border-bottom:2px solid transparent;margin-bottom:-2px;background:transparent;">Notificaciones</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-evidencias" data-bs-toggle="tab" data-bs-target="#section-evidencias" type="button" role="tab" style="font-weight:600;font-size:0.9rem;padding:10px 18px;color:var(--sgic-text);border:none;border-bottom:2px solid transparent;margin-bottom:-2px;background:transparent;">Evidencias</button>
+            </li>
+            {% if es_admin or es_supervisor and incidente.supervisor == p or es_especialista and incidente.especialista_asignado == p %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-comunicacion" data-bs-toggle="tab" data-bs-target="#section-comunicacion" type="button" role="tab" style="font-weight:600;font-size:0.9rem;padding:10px 18px;color:var(--sgic-text);border:none;border-bottom:2px solid transparent;margin-bottom:-2px;background:transparent;{% if incidente.estado_incidente.code == 'CER' %}opacity:0.5;{% endif %}">
+                    Comunicaci&oacute;n
+                    {% if incidente.estado_incidente.code == 'CER' %}
+                        <span style="font-size:0.7rem;color:var(--sgic-text-light);margin-left:4px;">(cerrado)</span>
+                    {% endif %}
+                </button>
+            </li>
             {% endif %}
-            <hr>
+        </ul>
 
-            <!-- EVIDENCIAS -->
-            <h5>Evidencias</h5>
-            {% with total_evidencias_notif=incidente.notificaciones_incidente.all|length %}
-                {% if total_evidencias_notif == 0 and not incidente.evidencias.exists %}
-                    <p class="text-muted">No hay evidencias asociadas a este incidente.</p>
-                {% else %}
-                    <div class="row g-3 mb-3">
-                        {% for notificacion in incidente.notificaciones_incidente.all %}
-                            {% for evidencia in notificacion.evidencias.all %}
-                                <div class="col-md-4 col-sm-6">
-                                    <div class="card h-100 shadow-sm">
-                                        <div class="card-body">
-                                            <span class="badge bg-secondary mb-2">De notificación</span>
-                                            <a href="{{ evidencia.archivo.url }}" target="_blank" class="d-block text-truncate">
-                                                {{ evidencia.archivo.name }}
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
+        <div class="tab-content">
+            <!-- Informacion General -->
+            <div class="tab-pane fade show active" id="section-general" role="tabpanel">
+                <div class="sgic-detail-section">
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">&Aacute;reas afectadas</span>
+                        <span class="detail-value">
+                            {% for area in incidente.areas_afectadas.all %}
+                                <span style="display:inline-block;padding:2px 10px;background:var(--sgic-bg);border-radius:12px;font-size:0.85rem;margin:2px 4px 2px 0;">{{ area }}</span>
+                            {% empty %}
+                                —
                             {% endfor %}
+                        </span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Supervisado por</span>
+                        <span class="detail-value">{{ incidente.supervisor }}</span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Asignado a</span>
+                        <span class="detail-value">
+                            {% if incidente.especialista_asignado %}
+                                {{ incidente.especialista_asignado }}
+                            {% else %}
+                                Sin asignar
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Prioridad</span>
+                        <span class="detail-value">{{ incidente.prioridad|default:"—" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reporte Oficial -->
+            <div class="tab-pane fade" id="section-reporte" role="tabpanel">
+                <div class="sgic-detail-section">
+                    <h5>Reporte Oficial — Resoluci&oacute;n 105/2025</h5>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Descripci&oacute;n</span>
+                        <span class="detail-value">{{ incidente.descripcion|linebreaks }}</span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Origen del incidente</span>
+                        <span class="detail-value">{{ incidente.origen_incidente|linebreaks|default:"—" }}</span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Recursos afectados</span>
+                        <span class="detail-value">{{ incidente.recursos_afectados|linebreaks|default:"—" }}</span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Contramedidas aplicadas</span>
+                        <span class="detail-value">{{ incidente.contramedidas|linebreaks|default:"—" }}</span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Otra informaci&oacute;n</span>
+                        <span class="detail-value">{{ incidente.otra_informacion|linebreaks|default:"—" }}</span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Categor&iacute;a</span>
+                        <span class="detail-value">{{ incidente.subcategoria.categoria|default:"—" }}</span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Subcategor&iacute;a</span>
+                        <span class="detail-value">{{ incidente.subcategoria|default:"—" }}</span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Peligrosidad</span>
+                        <span class="detail-value">{{ incidente.peligrosidad|default:"—" }}</span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Sistema operativo</span>
+                        <span class="detail-value">{{ incidente.sistema_operativo|default:"—" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clasificacion Interna -->
+            <div class="tab-pane fade" id="section-clasificacion" role="tabpanel">
+                <div class="sgic-detail-section">
+                    <h5>Clasificaci&oacute;n Interna</h5>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Tipo de incidente</span>
+                        <span class="detail-value">{{ incidente.tipo_incidente|default:"—" }}</span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Alcance</span>
+                        <span class="detail-value">{{ incidente.alcance|default:"—" }}</span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Vector de ataque</span>
+                        <span class="detail-value">{{ incidente.vector_ataque|default:"—" }}</span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Fuente de detecci&oacute;n</span>
+                        <span class="detail-value">{{ incidente.fuente_deteccion|default:"—" }}</span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Tecnolog&iacute;a involucrada</span>
+                        <span class="detail-value">{{ incidente.tecnologia|default:"—" }}</span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Intencionalidad</span>
+                        <span class="detail-value">{{ incidente.intencionalidad|default:"—" }}</span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Impacto</span>
+                        <span class="detail-value">{{ incidente.impacto_incidente|default:"—" }}</span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Involucrados</span>
+                        <span class="detail-value">
+                            {% for persona in incidente.involucrados.all %}
+                                <span style="display:inline-block;padding:2px 8px;background:var(--sgic-bg);border-radius:12px;font-size:0.85rem;margin:2px 4px 2px 0;">{{ persona }}</span>
+                            {% empty %}
+                                Ninguno
+                            {% endfor %}
+                        </span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Indicadores de compromiso</span>
+                        <span class="detail-value">
+                            {% for ioc in incidente.indicador_compromiso.all %}
+                                <div style="padding:4px 0;font-size:0.9rem;">{{ ioc.tipo_ioc }} — {{ ioc.valor }}</div>
+                            {% empty %}
+                                Ninguno
+                            {% endfor %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Temporalidad -->
+            <div class="tab-pane fade" id="section-temporalidad" role="tabpanel">
+                <div class="sgic-detail-section">
+                    <h5>Temporalidad</h5>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Fecha de inicio</span>
+                        <span class="detail-value">{{ incidente.fecha_ocurrencia|default:"—" }}</span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Fecha de detecci&oacute;n</span>
+                        <span class="detail-value">{{ incidente.fecha_reportado }}</span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Fecha de asignaci&oacute;n</span>
+                        <span class="detail-value">{{ incidente.fecha_asignacion|default:"—" }}</span>
+                    </div>
+                    <div class="sgic-detail-row">
+                        <span class="detail-label">Fecha de cierre</span>
+                        <span class="detail-value">{{ incidente.fecha_solucion|default:"—" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notificaciones Asociadas -->
+            <div class="tab-pane fade" id="section-notificaciones" role="tabpanel">
+                <div class="sgic-detail-section">
+                    <h5>Notificaciones Asociadas</h5>
+                    {% if incidente.notificaciones_incidente.all %}
+                        {% for notificacion in incidente.notificaciones_incidente.all %}
+                            <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:{% if notificacion == notificacion_origen %}rgba(25,118,210,0.06){% else %}var(--sgic-bg){% endif %};border-radius:var(--sgic-radius);margin-bottom:6px;{% if notificacion == notificacion_origen %}border:1px solid rgba(25,118,210,0.2);{% endif %}">
+                                {% if es_alta_gerencia %}
+                                    {% with areas_supervision=request.user.perfil_persona.config_gerencia.areas_supervision.all %}
+                                        {% if notificacion.area_notificacion in areas_supervision %}
+                                            <a href="{% url 'notification-detail' notificacion.pk %}" style="font-size:0.9rem;">{{ notificacion.asunto }} — {{ notificacion.usuario_notificador }}</a>
+                                        {% else %}
+                                            <span style="font-size:0.9rem;">{{ notificacion.asunto }} — {{ notificacion.usuario_notificador }} <span class="text-muted">(sin acceso)</span></span>
+                                        {% endif %}
+                                    {% endwith %}
+                                {% else %}
+                                    <a href="{% url 'notification-detail' notificacion.pk %}" style="font-size:0.9rem;">{{ notificacion.asunto }} — {{ notificacion.usuario_notificador }}</a>
+                                {% endif %}
+                                {% if notificacion == notificacion_origen %}
+                                    <span class="sgic-badge" style="background:rgba(25,118,210,0.12);color:var(--sgic-accent);margin-left:auto;font-size:0.7rem;">Origen</span>
+                                {% endif %}
+                                {% if es_admin or es_supervisor and incidente.supervisor == p %}
+                                <form method="POST" action="{% url 'notificacion-desvincular' notificacion.pk %}" style="margin:0 0 0 4px;display:inline;" onsubmit="return confirm('¿Desvincular esta notificación del incidente?')">
+                                    {% csrf_token %}
+                                    <button type="submit" class="sgic-btn sgic-btn-sm sgic-btn-danger" style="padding:2px 8px;font-size:0.7rem;" title="Desvincular notificaci&oacute;n">✕</button>
+                                </form>
+                                {% endif %}
+                            </div>
                         {% endfor %}
-                        {% for evidencia in incidente.evidencias.all %}
-                            <div class="col-md-4 col-sm-6">
-                                <div class="card h-100 shadow-sm">
-                                    <div class="card-body">
-                                        <span class="badge bg-primary mb-2">Del incidente</span>
-                                        <a href="{{ evidencia.archivo.url }}" target="_blank" class="d-block text-truncate">
-                                            {{ evidencia.archivo.name }}
-                                        </a>
-                                        {% if es_admin or es_supervisor %}
-                                            <form method="POST" action="{% url 'incidente-evidencia-eliminar' evidencia.pk %}" style="display:inline;">
+                    {% else %}
+                        <p style="color:var(--sgic-text-light);font-size:0.9rem;margin:0;">No existen notificaciones asociadas.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Evidencias -->
+            <div class="tab-pane fade" id="section-evidencias" role="tabpanel">
+                <div class="sgic-detail-section">
+                    <h5>Evidencias</h5>
+                    {% if incidente.notificaciones_incidente.all|length == 0 and not incidente.evidencias.exists %}
+                        <p style="color:var(--sgic-text-light);font-size:0.9rem;margin:0;">No hay evidencias asociadas a este incidente.</p>
+                    {% else %}
+                        <div class="sgic-evidence-grid">
+                            {% for notificacion in incidente.notificaciones_incidente.all %}
+                                {% for evidencia in notificacion.evidencias.all %}
+                                    <div style="padding:12px 16px;background:rgba(156,39,176,0.04);border-radius:var(--sgic-radius);border:1px solid rgba(156,39,176,0.15);">
+                                        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
+                                            <span class="sgic-badge" style="background:rgba(156,39,176,0.12);color:#9c27b0;">De notificaci&oacute;n</span>
+                                            <a href="{% url 'notification-detail' notificacion.pk %}" style="font-size:0.8rem;color:#9c27b0;text-decoration:none;padding:2px 8px;background:rgba(156,39,176,0.06);border-radius:12px;">{{ notificacion.asunto|truncatechars:35 }}</a>
+                                        </div>
+                                        <a href="{{ evidencia.archivo.url }}" target="_blank" style="display:block;font-size:0.85rem;word-break:break-all;">{{ evidencia.archivo.name }}</a>
+                                    </div>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for evidencia in incidente.evidencias.all %}
+                                <div style="padding:12px 16px;background:rgba(46,125,50,0.04);border-radius:var(--sgic-radius);border:1px solid rgba(46,125,50,0.15);">
+                                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                                        <span class="sgic-badge sgic-badge-success">Del incidente</span>
+                                        {% if es_admin or es_supervisor and incidente.supervisor == p %}
+                                            <form method="POST" action="{% url 'incidente-evidencia-eliminar' evidencia.pk %}" style="margin:0 0 0 auto;">
                                                 {% csrf_token %}
-                                                <button type="submit" class="btn btn-sm btn-danger">🗑</button>
+                                                <button type="submit" class="sgic-btn sgic-btn-sm sgic-btn-danger" style="padding:2px 8px;font-size:0.75rem;">Eliminar</button>
                                             </form>
                                         {% endif %}
                                     </div>
+                                    <a href="{{ evidencia.archivo.url }}" target="_blank" style="display:block;font-size:0.85rem;word-break:break-all;">{{ evidencia.archivo.name }}</a>
                                 </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    {% if es_admin or es_supervisor or incidente.especialista_asignado == request.user.perfil_persona %}
+                        {% if incidente.estado_incidente.code != 'CER' %}
+                            <button data-bs-toggle="modal" data-bs-target="#modalEvidencia" class="sgic-btn sgic-btn-primary sgic-btn-sm" style="margin-top:12px;">+ Subir Evidencia</button>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Comunicación -->
+            <div class="tab-pane fade" id="section-comunicacion" role="tabpanel">
+                <div class="sgic-detail-section">
+                    <div style="max-height:400px;overflow-y:auto;padding:4px;display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+                        {% for msg in incidente.mensajes.all %}
+                            <div style="display:flex;flex-direction:column;align-items:{% if msg.remitente == request.user.perfil_persona %}flex-end{% else %}flex-start{% endif %};">
+                                <div style="max-width:85%;padding:8px 14px;border-radius:12px;background:{% if msg.remitente == request.user.perfil_persona %}var(--sgic-accent){% else %}var(--sgic-bg){% endif %};color:{% if msg.remitente == request.user.perfil_persona %}#fff{% else %}var(--sgic-text){% endif %};font-size:0.85rem;line-height:1.4;word-wrap:break-word;">
+                                    {{ msg.contenido|linebreaks }}
+                                </div>
+                                <div style="font-size:0.65rem;color:var(--sgic-text-secondary);margin-top:2px;">
+                                    {{ msg.remitente.nombre }} {{ msg.remitente.apellidos }} &middot; {{ msg.fecha_creacion|date:"d/m/Y H:i" }}
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div style="text-align:center;padding:30px;color:var(--sgic-text-light);font-size:0.85rem;">
+                                No hay mensajes en este incidente.
                             </div>
                         {% endfor %}
                     </div>
-                {% endif %}
-            {% endwith %}
+                    {% if incidente.estado_incidente.code == 'CER' %}
+                    <div style="text-align:center;padding:16px;background:var(--sgic-bg);border-radius:var(--sgic-radius);border-top:1px solid var(--sgic-border);">
+                        <span style="font-size:0.85rem;color:var(--sgic-text-light);">&#128274; Canal de comunicaci&oacute;n cerrado. El incidente se encuentra en estado <strong>Cerrado</strong>.</span>
+                    </div>
+                    {% else %}
+                    <form method="POST" action="{% url 'incidente-mensajes' incidente.pk %}" style="display:flex;gap:8px;border-top:1px solid var(--sgic-border);padding-top:12px;">
+                        {% csrf_token %}
+                        <textarea name="contenido" class="sgic-form-control" rows="2" placeholder="Escriba un mensaje..." style="resize:none;flex:1;font-size:0.85rem;"></textarea>
+                        <button type="submit" class="sgic-btn sgic-btn-primary sgic-btn-sm" style="align-self:flex-end;">Enviar</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 
-            <!-- BOTÓN SUBIR EVIDENCIA -->
-            {% if es_admin or es_supervisor or incidente.especialista_asignado == request.user.perfil_persona %}
-                {% if incidente.estado_incidente.code != 'REC' %}
-                    <button data-bs-toggle="modal" data-bs-target="#modalEvidencia" 
-                            class="btn btn-primary mt-2">
-                        Subir Evidencia
-                    </button>
-                {% endif %}
+    {% if incidente.estado_incidente.code != 'CER' %}
+    <div class="sgic-card-footer" style="display:flex;gap:8px;flex-wrap:wrap;">
+        {% with p=request.user.perfil_persona %}
+        {% if es_admin or incidente.supervisor == p or incidente.especialista_asignado == p %}
+            <a href="{% url 'incidente-wizard' incidente.pk '1' %}" class="sgic-btn sgic-btn-primary">Clasificar</a>
+        {% endif %}
+        {% if es_admin or incidente.supervisor == p %}
+            {% if incidente.especialista_asignado %}
+                <form method="POST" action="{% url 'incidente-reasignar' incidente.pk %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="sgic-btn sgic-btn-warning">Reasignar Especialista</button>
+                </form>
+            {% else %}
+                <a href="{% url 'incidente-asignar' incidente.pk %}" class="sgic-btn sgic-btn-warning">Asignar Especialista</a>
             {% endif %}
-
-            <!-- BOTONES DE ACCIÓN -->
-            <div class="d-flex gap-2 mt-3">
-                <a href="{% url 'incidente-lista' %}" class="btn btn-secondary">
-                    Volver al listado
-                </a>
-                {% if incidente.estado_incidente.code != 'REC' and incidente.estado_incidente.code != 'RES' %}
-                    {% if es_admin or es_supervisor or incidente.especialista_asignado == request.user.perfil_persona %}
-                        <a href="{% url 'incidente-wizard' incidente.pk '1' %}" class="btn btn-primary">
-                            Clasificar
-                        </a>
-                    {% endif %}
-                    {% if es_admin or es_supervisor %}
-                        {% if not incidente.especialista_asignado %}
-                            <a href="{% url 'incidente-asignar' incidente.pk %}" class="btn btn-warning">
-                                Asignar Especialista
-                            </a>
-                        {% endif %}
-                    {% endif %}
-                    {% if es_admin or es_supervisor or incidente.especialista_asignado == request.user.perfil_persona %}
-                        <button data-bs-toggle="modal" data-bs-target="#modalDeclinar" class="btn btn-danger">
-                            Declinar
-                        </button>
-                    {% endif %}
-                {% endif %}
-            </div>
-
-        </div>
+            <a href="{% url 'incidente-eliminar' incidente.pk %}" class="sgic-btn sgic-btn-danger" onclick="return confirm('¿Estás seguro de eliminar el incidente {{ incidente.codigo }}?')">Eliminar Incidente</a>
+        {% endif %}
+        {% endwith %}
     </div>
+    {% endif %}
+</div>
 
-    <!-- Modal Declinar -->
-    <div class="modal fade" id="modalDeclinar">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5>Declinar Incidente</h5>
-                </div>
-                <div class="modal-body">
-                    <form method="POST" action="{% url 'incidente-declinar' incidente.pk %}">
-                        {% csrf_token %}
-                        <textarea name="motivo_rechazo" class="form-control" rows="4" required>Este incidente ha sido rechazado. </textarea>
-                        <button type="submit" class="btn btn-danger mt-3">Confirmar rechazo</button>
-                    </form>
-                </div>
+<!-- Modal Subir Evidencia -->
+<div class="modal fade" id="modalEvidencia">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Subir Evidencia</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-        </div>
-    </div>
-
-    <!-- Modal Subir Evidencia -->
-    <div class="modal fade" id="modalEvidencia">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5>Subir Evidencia</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form method="POST" action="{% url 'incidente-evidencia' incidente.pk %}" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <input type="file" name="archivo" class="form-control" required>
-                        <button type="submit" class="btn btn-success mt-3">Subir</button>
-                    </form>
-                </div>
+            <div class="modal-body">
+                <form method="POST" action="{% url 'incidente-evidencia' incidente.pk %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="sgic-form-group">
+                        <label>Seleccionar archivo</label>
+                        <input type="file" name="archivo" class="sgic-form-control" multiple>
+                    </div>
+                    <button type="submit" class="sgic-btn sgic-btn-success">Subir</button>
+                </form>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Modal Cerrar Incidente con Mensaje -->
+<div class="modal fade" id="modalCerrarIncidente" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cerrar Incidente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formCerrarIncidente" method="POST" action="{% url 'incidente-cambiar-estado' incidente.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="estado" value="CER">
+                <div class="modal-body">
+                    <p style="margin:0 0 12px;font-size:0.9rem;color:var(--sgic-text-secondary);">
+                        Al cerrar el incidente, se enviará un mensaje de notificación a los usuarios que reportaron las incidencias. Redacte el mensaje a continuación:
+                    </p>
+                    <div class="sgic-form-group">
+                        <label for="mensajeCierre">Mensaje para el usuario notificador</label>
+                        <textarea name="mensaje_contenido" id="mensajeCierre" class="sgic-form-control" rows="4" placeholder="Ej: Sus notificaciones han sido procesadas. El incidente {{ incidente.codigo }} ha sido resuelto..." style="resize:vertical;"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="sgic-btn sgic-btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="sgic-btn sgic-btn-success">Cerrar Incidente y Notificar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function cambiarEstado(select) {
+    if (select.value === 'CER') {
+        var modal = new bootstrap.Modal(document.getElementById('modalCerrarIncidente'));
+        modal.show();
+        select.value = '{{ incidente.estado_incidente.code|default:"ASI" }}';
+    } else {
+        select.form.submit();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var params = new URLSearchParams(window.location.search);
+    var tab = params.get('tab');
+    if (tab) {
+        var tabId = 'tab-' + tab;
+        var tabBtn = document.getElementById(tabId);
+        if (tabBtn) {
+            var tabInstance = new bootstrap.Tab(tabBtn);
+            tabInstance.show();
+        }
+    }
+});
+</script>
 {% endblock %}

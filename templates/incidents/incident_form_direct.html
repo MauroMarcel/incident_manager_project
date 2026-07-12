@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block content %}
+{% if messages %}
+    {% for message in messages %}
+        <div class="sgic-alert sgic-alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
+<div style="margin-top:16px;">
+    <div class="sgic-card">
+        <div class="sgic-card-header">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <div class="card-header-accent" style="background:var(--sgic-accent);"></div>
+                <h5 style="margin:0;font-size:1.05rem;font-weight:600;">Crear Incidente</h5>
+            </div>
+        </div>
+        <div class="sgic-card-body">
+            <form method="POST" novalidate>
+                {% csrf_token %}
+                <div class="row">
+                    {% for field in form %}
+                        {% if field.name == 'areas_afectadas' or field.name == 'especialista_asignado' %}
+                            {% if field.name == 'areas_afectadas' %}
+                    <div class="col-md-6">
+                        <div class="sgic-form-group">
+                            <label for="{{ field.id_for_label }}" style="font-weight:600;font-size:0.9rem;color:var(--sgic-text);margin-bottom:6px;display:block;">
+                                {{ field.label }}{% if field.field.required %} <span style="color:var(--sgic-danger);">*</span>{% endif %}
+                            </label>
+                            <input type="text" id="{{ field.auto_id }}_filter" placeholder="Filtrar áreas..." style="width:66%;padding:6px 10px;font-size:0.85rem;border:1px solid var(--sgic-border);border-radius:var(--sgic-radius);margin-bottom:8px;box-sizing:border-box;">
+                            <div class="sgic-checkbox-grid" id="{{ field.auto_id }}_grid">
+                                {{ field }}
+                            </div>
+                            <script>
+                            document.getElementById('{{ field.auto_id }}_filter').addEventListener('input', function(){
+                                var q = this.value.toLowerCase();
+                                document.querySelectorAll('#{{ field.auto_id }}_grid label').forEach(function(lbl){
+                                    lbl.style.display = lbl.textContent.toLowerCase().includes(q) ? '' : 'none';
+                                });
+                            });
+                            </script>
+                            {% if field.help_text %}
+                                <small style="color:var(--sgic-text-light);font-size:0.8rem;display:block;margin-top:4px;">{{ field.help_text }}</small>
+                            {% endif %}
+                            {% if field.errors %}
+                                <div style="color:var(--sgic-danger);font-size:0.85rem;margin-top:4px;">{{ field.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                            {% elif field.name == 'especialista_asignado' %}
+                    <div class="col-md-6">
+                        <div class="sgic-form-group">
+                            <label style="font-weight:600;font-size:0.9rem;color:var(--sgic-text);margin-bottom:6px;display:block;">
+                                {{ field.label }}{% if field.field.required %} <span style="color:var(--sgic-danger);">*</span>{% endif %}
+                            </label>
+                            <div style="display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto;padding-right:4px;">
+                                {% for esp in especialistas %}
+                                <label style="display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--sgic-border);border-radius:var(--sgic-radius);cursor:pointer;transition:var(--sgic-transition);margin:0;" onmouseover="this.style.borderColor='var(--sgic-accent-light)'" onmouseout="this.style.borderColor='var(--sgic-border)'">
+                                    <input type="radio" name="especialista_asignado" value="{{ esp.pk }}" required style="accent-color:var(--sgic-accent);width:16px;height:16px;flex-shrink:0;">
+                                    <div style="flex:1;">
+                                        <div style="font-weight:600;font-size:0.9rem;">{{ esp.nombre }} {{ esp.apellidos }}</div>
+                                        <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
+                                            <span style="font-size:0.75rem;padding:1px 8px;background:rgba(25,118,210,0.1);color:var(--sgic-accent);border-radius:10px;">Exp: {{ esp.exp_tipo }}</span>
+                                            <span style="font-size:0.75rem;padding:1px 8px;background:rgba(237,108,2,0.1);color:var(--sgic-warning);border-radius:10px;">Activos: {{ esp.casos_activos }}</span>
+                                            <span style="font-size:0.75rem;padding:1px 8px;background:rgba(46,125,50,0.1);color:var(--sgic-success);border-radius:10px;">Resueltos: {{ esp.total_resueltos }}</span>
+                                        </div>
+                                    </div>
+                                </label>
+                                {% empty %}
+                                <p style="color:var(--sgic-text-light);font-size:0.9rem;">No hay especialistas disponibles.</p>
+                                {% endfor %}
+                            </div>
+                            {% if field.errors %}
+                                <div style="color:var(--sgic-danger);font-size:0.85rem;margin-top:4px;">{{ field.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                            {% endif %}
+                        {% else %}
+                    <div class="col-12">
+                        <div class="sgic-form-group">
+                            <label for="{{ field.id_for_label }}" style="font-weight:600;font-size:0.9rem;color:var(--sgic-text);margin-bottom:6px;display:block;">
+                                {{ field.label }}{% if field.field.required %} <span style="color:var(--sgic-danger);">*</span>{% endif %}
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <small style="color:var(--sgic-text-light);font-size:0.8rem;display:block;margin-top:4px;">{{ field.help_text }}</small>
+                            {% endif %}
+                            {% if field.errors %}
+                                <div style="color:var(--sgic-danger);font-size:0.85rem;margin-top:4px;">{{ field.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div style="display:flex;gap:10px;margin-top:24px;padding-top:16px;border-top:1px solid var(--sgic-border);">
+                    <button type="submit" class="sgic-btn sgic-btn-success" style="padding:10px 28px;font-weight:500;">Guardar Incidente</button>
+                    <a href="{% url 'incidente-lista' %}" class="sgic-btn sgic-btn-secondary" style="padding:10px 28px;">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

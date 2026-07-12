@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}{{ reporte.titulo }}{% endblock %}
+{% block content %}
+
+<div class="sgic-page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+    <div>
+        <h1>{{ reporte.titulo }}</h1>
+        <p>{{ reporte.get_tipo_reporte_display }}
+            {% if reporte.fecha_inicio and reporte.fecha_fin %}
+                &middot; {{ reporte.fecha_inicio|date:"d/m/Y" }} - {{ reporte.fecha_fin|date:"d/m/Y" }}
+            {% endif %}
+            &middot; Generado por {{ reporte.generado_por|default:"Sistema" }}
+            &middot; {{ incidentes|length }} incidentes
+        </p>
+    </div>
+    <div>
+        <a href="{% url 'reporte-lista' %}" class="sgic-btn sgic-btn-secondary">&larr; Volver</a>
+    </div>
+</div>
+
+{% if reporte.descripcion %}
+<div class="sgic-card" style="margin-bottom:24px;">
+    <div class="sgic-card-header">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div class="card-header-accent" style="background:var(--sgic-primary);"></div>
+            <h5 style="margin:0;font-size:1rem;font-weight:600;">Descripci&oacute;n del Reporte</h5>
+        </div>
+    </div>
+    <div class="sgic-card-body">
+        <p style="margin:0;color:var(--sgic-text-secondary);line-height:1.6;">{{ reporte.descripcion }}</p>
+    </div>
+</div>
+{% endif %}
+
+{% if incidentes %}
+
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+    <div style="flex:1;height:1px;background:var(--sgic-border);"></div>
+    <span style="font-size:0.85rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--sgic-text-secondary);white-space:nowrap;">Resumen Gr&aacute;fico</span>
+    <div style="flex:1;height:1px;background:var(--sgic-border);"></div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="sgic-card" style="height:100%;">
+            <div class="sgic-card-header">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div class="card-header-accent" style="background:var(--sgic-accent);"></div>
+                    <h5 style="margin:0;font-size:0.95rem;font-weight:600;">Por Estado</h5>
+                </div>
+            </div>
+            <div class="sgic-card-body">
+                <p style="font-size:0.8rem;color:var(--sgic-text-light);margin:0 0 12px 0;">Distribuci&oacute;n de incidentes seg&uacute;n su estado actual (Asignado, Investigaci&oacute;n, Cerrado, etc.)</p>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    {% for item in por_estado %}
+                    <div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+                            <span style="font-size:0.85rem;font-weight:500;">{{ item.estado_incidente__name }}</span>
+                            <span style="font-size:0.85rem;font-weight:700;color:var(--sgic-accent);">{{ item.total }}</span>
+                        </div>
+                        <div style="height:16px;background:#f0f0f0;border-radius:8px;overflow:hidden;">
+                            <div style="height:100%;width:{% widthratio item.total por_estado_max 100 %}%;background:var(--sgic-accent);border-radius:8px;transition:width 0.3s;min-width:{% if item.total > 0 %}4px{% else %}0{% endif %};"></div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p style="color:var(--sgic-text-light);font-size:0.85rem;margin:0;">Sin datos</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="sgic-card" style="height:100%;">
+            <div class="sgic-card-header">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div class="card-header-accent" style="background:var(--sgic-danger);"></div>
+                    <h5 style="margin:0;font-size:0.95rem;font-weight:600;">Por Impacto</h5>
+                </div>
+            </div>
+            <div class="sgic-card-body">
+                <p style="font-size:0.8rem;color:var(--sgic-text-light);margin:0 0 12px 0;">Clasificaci&oacute;n de incidentes por nivel de impacto en la organizaci&oacute;n.</p>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    {% for item in por_impacto %}
+                    <div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+                            <span style="font-size:0.85rem;font-weight:500;">{{ item.impacto_incidente__name|default:"Sin impacto" }}</span>
+                            <span style="font-size:0.85rem;font-weight:700;color:var(--sgic-danger);">{{ item.total }}</span>
+                        </div>
+                        <div style="height:16px;background:#f0f0f0;border-radius:8px;overflow:hidden;">
+                            <div style="height:100%;width:{% widthratio item.total por_impacto_max 100 %}%;background:var(--sgic-danger);border-radius:8px;transition:width 0.3s;min-width:{% if item.total > 0 %}4px{% else %}0{% endif %};"></div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p style="color:var(--sgic-text-light);font-size:0.85rem;margin:0;">Sin datos</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="sgic-card" style="height:100%;">
+            <div class="sgic-card-header">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div class="card-header-accent" style="background:var(--sgic-warning);"></div>
+                    <h5 style="margin:0;font-size:0.95rem;font-weight:600;">Por Tipo</h5>
+                </div>
+            </div>
+            <div class="sgic-card-body">
+                <p style="font-size:0.8rem;color:var(--sgic-text-light);margin:0 0 12px 0;">Categorizaci&oacute;n de incidentes seg&uacute;n la naturaleza del evento reportado.</p>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    {% for item in por_tipo %}
+                    <div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+                            <span style="font-size:0.85rem;font-weight:500;">{{ item.tipo_incidente__name|default:"Sin tipo" }}</span>
+                            <span style="font-size:0.85rem;font-weight:700;color:var(--sgic-warning);">{{ item.total }}</span>
+                        </div>
+                        <div style="height:16px;background:#f0f0f0;border-radius:8px;overflow:hidden;">
+                            <div style="height:100%;width:{% widthratio item.total por_tipo_max 100 %}%;background:var(--sgic-warning);border-radius:8px;transition:width 0.3s;min-width:{% if item.total > 0 %}4px{% else %}0{% endif %};"></div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p style="color:var(--sgic-text-light);font-size:0.85rem;margin:0;">Sin datos</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+    <div style="flex:1;height:1px;background:var(--sgic-border);"></div>
+    <span style="font-size:0.85rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--sgic-text-secondary);white-space:nowrap;">Incidentes incluidos</span>
+    <div style="flex:1;height:1px;background:var(--sgic-border);"></div>
+</div>
+
+<div class="sgic-card">
+    <div class="sgic-card-body" style="padding:0;">
+        <div style="overflow-x:auto;">
+            <table class="sgic-table">
+                <thead>
+                    <tr>
+                        <th>C&oacute;digo</th>
+                        <th>T&iacute;tulo</th>
+                        <th>Estado</th>
+                        <th>Impacto</th>
+                        <th>Tipo</th>
+                        <th>Responsable</th>
+                        <th>Fecha</th>
+                        <th>Ficha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inc in incidentes %}
+                    <tr>
+                        <td><strong>{{ inc.codigo }}</strong></td>
+                        <td>{{ inc.titulo|truncatechars:50 }}</td>
+                        <td><span class="sgic-badge sgic-badge-{{ inc.estado_incidente.code|lower }}">{{ inc.estado_incidente.name }}</span></td>
+                        <td>{{ inc.impacto_incidente|default:"&mdash;" }}</td>
+                        <td>{{ inc.tipo_incidente|default:"&mdash;" }}</td>
+                        <td>{{ inc.supervisor|default:"&mdash;" }}</td>
+                        <td>{{ inc.fecha_reportado|date:"d/m/Y" }}</td>
+                        <td><a href="{% url 'incidente-ficha' inc.pk %}" class="sgic-btn sgic-btn-sm sgic-btn-outline">Ficha</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="sgic-card">
+    <div class="sgic-card-body text-center" style="padding:60px 20px;">
+        <div style="font-size:3rem;margin-bottom:12px;opacity:0.3;">📊</div>
+        <p style="font-size:1.1rem;color:var(--sgic-text-light);margin:0;">No se encontraron incidentes en el rango seleccionado.</p>
+        <p style="font-size:0.9rem;color:var(--sgic-text-light);margin-top:6px;">Intente ampliar el rango de fechas o crear un nuevo reporte con diferentes par&aacute;metros.</p>
+        <a href="{% url 'reporte-lista' %}" class="sgic-btn sgic-btn-primary" style="margin-top:16px;">Volver a Reportes</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

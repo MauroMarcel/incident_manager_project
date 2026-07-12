@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User, Group
-from .models import Persona
+from .models import Persona, Categoria_Persona, Cargo, Estado_Persona
 
 class PersonaForm(forms.ModelForm):
     es_usuario = forms.BooleanField(required=False, label='¿Registrar como usuario del sistema?',initial=False)
@@ -10,9 +10,12 @@ class PersonaForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['jefe_directo'].queryset = Persona.objects.filter(
-            active=True
-        )
+        qs = Persona.objects.filter(active=True)
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        self.fields['jefe_directo'].queryset = qs
+        self.fields['categoria_persona'].label = 'Categoria'
+        self.fields['estado_persona'].label = 'Estado'
     class Meta:
         model = Persona
         fields = [
@@ -37,3 +40,40 @@ class PersonaForm(forms.ModelForm):
                 self.add_error('rol', 'Debe asignar un rol al usuario.')
         
         return cleaned_data
+
+class PersonaUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Persona
+        fields = [
+            'nombre', 'apellidos', 'email', 'area',
+            'cargo', 'categoria_persona', 'estado_persona',
+            'jefe_directo'
+        ]
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        qs = Persona.objects.filter(active=True)
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        self.fields['jefe_directo'].queryset = qs
+        self.fields['area'].required = True
+        self.fields['categoria_persona'].label = 'Categoria'
+        self.fields['estado_persona'].label = 'Estado'
+
+
+class Categoria_PersonaForm(forms.ModelForm):
+    class Meta:
+        model = Categoria_Persona
+        fields = ['code', 'name', 'active']
+
+
+class CargoForm(forms.ModelForm):
+    class Meta:
+        model = Cargo
+        fields = ['code', 'name', 'active']
+
+
+class Estado_PersonaForm(forms.ModelForm):
+    class Meta:
+        model = Estado_Persona
+        fields = ['code', 'name', 'active']

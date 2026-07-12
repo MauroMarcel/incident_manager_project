@@ -57,6 +57,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'base.middleware.IdleSessionTimeoutMiddleware',
 ]
 
 ROOT_URLCONF = 'incident_manager_project.urls'
@@ -71,7 +72,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'base.context_processors.roles_usuario',  
+                'base.context_processors.roles_usuario',
+                'base.context_processors.mensajes_no_leidos',  
             ],
         },
     },
@@ -126,6 +128,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
@@ -151,6 +156,11 @@ REST_FRAMEWORK = {
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = 'login'
+
+# Session — idle timeout 30 minutos, expira al cerrar navegador
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 1800
+SESSION_IDLE_TIMEOUT = 1800
 
 # Email
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

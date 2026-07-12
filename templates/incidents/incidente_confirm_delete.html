@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="sgic-card" style="max-width:600px;margin:40px auto;">
+    <div class="sgic-card-header">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div class="card-header-accent" style="background:var(--sgic-danger);"></div>
+            <h4 style="margin:0;">Eliminar Incidente</h4>
+        </div>
+    </div>
+    <div class="sgic-card-body">
+        <p style="font-size:0.95rem;margin-bottom:16px;">
+            ¿Estás seguro de que deseas eliminar el incidente <strong>{{ incidente.codigo }} — {{ incidente.titulo }}</strong>?
+        </p>
+        <p style="font-size:0.85rem;color:var(--sgic-text-secondary);margin-bottom:20px;">
+            El incidente quedará oculto del sistema pero se conservará en la base de datos. Puede ser restaurado por un administrador.
+        </p>
+        <form method="POST">
+            {% csrf_token %}
+            <div style="display:flex;gap:8px;">
+                <a href="{% url 'incidente-lista' %}" class="sgic-btn sgic-btn-secondary">Cancelar</a>
+                <button type="submit" class="sgic-btn sgic-btn-danger">Sí, eliminar incidente</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

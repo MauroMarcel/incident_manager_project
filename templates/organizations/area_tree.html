@@ -1,24 +1,207 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Estructura Organizacional</h4>
+<div class="sgic-page-header">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div>
+            <h1>Estructura Organizacional</h1>
+            <p>&Aacute;rbol jer&aacute;rquico de &aacute;reas del sistema</p>
         </div>
-        <div class="card-body">
-            {% if es_admin %}
-            <div class="mb-3">
-                <a href="{% url 'area-crear' %}" class="btn btn-primary">
-                    Nueva Área
-                </a>
-            </div>
-            {% endif %}
-            <ul>
-                {% for area in areas_raiz %}
-                    {% include 'organizations/area_nodo.html' with area=area %}
-                {% endfor %}
-            </ul>
-        </div>
+        {% if es_admin %}
+        <a href="{% url 'area-crear' %}" class="sgic-btn sgic-btn-primary">+ Nueva &Aacute;rea Ra&iacute;z</a>
+        {% endif %}
     </div>
 </div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="sgic-alert sgic-alert-{{ message.tags }}" style="margin-bottom:16px;">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
+<div class="sgic-card">
+    <div class="sgic-card-header">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div class="card-header-accent" style="background:var(--sgic-accent);"></div>
+            <h5 style="margin:0;font-size:1.05rem;font-weight:600;">Jerarqu&iacute;a de &Aacute;reas</h5>
+        </div>
+    </div>
+    <div class="sgic-card-body">
+        {% if areas_raiz %}
+            <ul class="area-tree">
+                {% for area in areas_raiz %}
+                    {% include 'organizations/area_nodo.html' with area=area depth=0 %}
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div style="text-align:center;padding:40px 20px;color:var(--sgic-text-secondary);">
+                <div style="font-size:2.5rem;margin-bottom:12px;opacity:0.4;">&#9733;</div>
+                <p style="font-size:1rem;margin:0;">No hay &aacute;reas registradas.</p>
+                {% if es_admin %}
+                <a href="{% url 'area-crear' %}" class="sgic-btn sgic-btn-primary" style="margin-top:12px;">Crear primera &aacute;rea</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.area-tree {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.area-tree ul {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 28px;
+    position: relative;
+}
+
+.area-tree > li {
+    position: relative;
+    padding: 6px 0;
+}
+
+.area-tree li {
+    position: relative;
+    padding: 5px 0 5px 20px;
+}
+
+.area-tree li::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 6px;
+    bottom: 50%;
+    width: 14px;
+    border-left: 2px solid var(--sgic-border);
+    border-bottom: 2px solid var(--sgic-border);
+    border-radius: 0 0 0 6px;
+}
+
+.area-tree li:last-child::before {
+    border-radius: 0 0 0 6px;
+}
+
+.area-tree li:last-child::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 6px;
+    bottom: 0;
+    width: 14px;
+}
+
+.area-tree > li::before {
+    display: none;
+}
+
+.area-tree > li {
+    padding-left: 0;
+}
+
+.area-node {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: background 0.15s;
+    white-space: nowrap;
+}
+
+.area-node:hover {
+    background: rgba(25,118,210,0.06);
+}
+
+.area-node .area-icon {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.area-node .area-icon.root-icon {
+    background: var(--sgic-accent, #1976d2);
+}
+
+.area-node .area-icon.child-icon {
+    background: #78909c;
+}
+
+.area-node .area-icon.leaf-icon {
+    background: #66bb6a;
+}
+
+.area-node .area-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--sgic-text);
+}
+
+.area-node .area-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.area-node .area-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.area-node .area-badge.my-area {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.area-node .area-badge.supervised {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.area-node .area-badge.both {
+    background: #f3e5f5;
+    color: #6a1b9a;
+}
+
+.area-node .btn-subarea {
+    opacity: 0;
+    transition: opacity 0.15s;
+    padding: 2px 8px;
+    font-size: 0.72rem;
+    border: 1px solid var(--sgic-border);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--sgic-text-secondary);
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.area-node:hover .btn-subarea {
+    opacity: 1;
+}
+
+.btn-subarea:hover {
+    background: var(--sgic-accent);
+    color: #fff;
+    border-color: var(--sgic-accent);
+}
+</style>
 {% endblock %}

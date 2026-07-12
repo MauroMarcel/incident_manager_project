@@ -1,53 +1,40 @@
 {% extends "base.html" %}
-
 {% block title %}Ficha - {{ incidente.codigo }}{% endblock %}
-
 {% block extra_styles %}
 <style>
     @media print {
-        .sidebar, .navbar, footer, .no-print {
-            display: none !important;
-        }
-        .col-lg-10 {
-            width: 100% !important;
-            margin: 0 !important;
-        }
+        .sidebar, .navbar, footer, .no-print { display: none !important; }
+        .col-lg-10 { width: 100% !important; margin: 0 !important; }
     }
     .ficha-table td, .ficha-table th {
-        border: 1px solid #000;
-        padding: 6px 10px;
-        font-size: 0.9rem;
+        border: 1px solid #000; padding: 6px 10px; font-size: 0.9rem;
     }
     .ficha-header {
-        background-color: #e9ecef;
-        font-weight: bold;
-        text-align: center;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+        background-color: #e9ecef; font-weight: bold; text-align: center;
+        text-transform: uppercase; letter-spacing: 1px;
     }
 </style>
 {% endblock %}
-
 {% block content %}
 <div class="row mb-4 no-print">
     <div class="col">
         <h1>Ficha del Incidente {{ incidente.codigo }}</h1>
     </div>
     <div class="col text-end">
-        <button onclick="window.print()" class="btn btn-dark">
-            <i class="bi bi-printer"></i> Imprimir
+        <button onclick="window.print()" class="sgic-btn sgic-btn-primary">
+            Imprimir
         </button>
-        <a href="{% url 'reporte-home' %}" class="btn btn-secondary">Volver</a>
+        <a href="{% url 'reporte-home' %}" class="sgic-btn sgic-btn-secondary">Volver</a>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-body">
-        <h5 class="text-center mb-4 text-uppercase">
-            Modelo de Información para Reportar los Incidentes de Ciberseguridad
+<div class="sgic-card">
+    <div class="sgic-card-body">
+        <h5 class="text-center mb-4 text-uppercase" style="font-weight:700;">
+            Modelo de Informaci&oacute;n para Reportar los Incidentes de Ciberseguridad
         </h5>
 
-        <table class="table ficha-table">
+        <table class="sgic-table ficha-table" style="border:1px solid #000;border-collapse:collapse;">
 
             <!-- DATOS DEL INFORMANTE -->
             <tr>
@@ -56,35 +43,27 @@
             <tr>
                 <td colspan="6">
                     <strong>Nombre y apellidos:</strong>
-                    {{ incidente.reportado_por|default:"No especificado" }}
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <strong>Organismo:</strong>
-                    {{ incidente.entidad_afectada|default:"-" }}
-                </td>
-                <td colspan="2">
-                    <strong>Entidad:</strong>
-                    {{ incidente.dependencia_afectada|default:"-" }}
-                </td>
-                <td colspan="2">
-                    <strong>Cargo:</strong>
-                    {{ incidente.reportado_por.cargo|default:"-" }}
+                    {{ incidente.supervisor|default:"No especificado" }}
                 </td>
             </tr>
             <tr>
                 <td colspan="3">
-                    <strong>Vía del reporte:</strong>
-                    {{ incidente.get_via_reporte_display }}
+                    <strong>&Aacute;reas afectadas:</strong>
+                    {% for area in incidente.areas_afectadas.all %}{{ area }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}
+                </td>
+                <td colspan="3">
+                    <strong>Cargo:</strong>
+                    {{ incidente.supervisor.cargo|default:"-" }}
+                </td>
+            </tr>
+            <tr>
+                <td colspan="4">
+                    <strong>V&iacute;a del reporte:</strong>
+                    Notificaci&oacute;n al sistema SGIC
                 </td>
                 <td colspan="2">
                     <strong>Fecha:</strong>
-                    {{ incidente.fecha_reporte|date:"d/m/Y" }}
-                </td>
-                <td>
-                    <strong>Hora:</strong>
-                    {{ incidente.fecha_reporte|date:"H:i" }}
+                    {{ incidente.fecha_reportado|date:"d/m/Y H:i" }}
                 </td>
             </tr>
 
@@ -93,19 +72,9 @@
                 <td colspan="6" class="ficha-header">Datos de la Entidad Afectada</td>
             </tr>
             <tr>
-                <td colspan="3">
-                    <strong>Organismo:</strong>
-                    {{ incidente.entidad_afectada|default:"-" }}
-                </td>
-                <td colspan="3">
-                    <strong>Dependencia:</strong>
-                    {{ incidente.dependencia_afectada|default:"-" }}
-                </td>
-            </tr>
-            <tr>
                 <td colspan="6">
-                    <strong>Sistemas Afectados:</strong>
-                    {{ incidente.sistemas_afectados|default:"-" }}
+                    <strong>&Aacute;reas afectadas:</strong>
+                    {% for area in incidente.areas_afectadas.all %}{{ area }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}
                 </td>
             </tr>
             <tr>
@@ -121,24 +90,20 @@
             </tr>
             <tr>
                 <td colspan="3">
-                    <strong>Categoría del incidente:</strong>
+                    <strong>Categor&iacute;a del incidente:</strong>
                     {{ incidente.tipo_incidente|default:"-" }}
                 </td>
                 <td colspan="3">
-                    <strong>Clasificación/Peligrosidad:</strong>
-                    {{ incidente.get_impacto_display }}
+                    <strong>Clasificaci&oacute;n/Peligrosidad:</strong>
+                    {{ incidente.peligrosidad|default:"-" }}
                 </td>
             </tr>
             <tr>
-                <td colspan="2">
-                    <strong>Fecha de detección:</strong>
-                    {{ incidente.fecha_deteccion|date:"d/m/Y" }}
+                <td colspan="3">
+                    <strong>Fecha de detecci&oacute;n:</strong>
+                    {{ incidente.fecha_ocurrencia|date:"d/m/Y"|default:"-" }}
                 </td>
-                <td colspan="2">
-                    <strong>Hora de detección:</strong>
-                    {{ incidente.fecha_deteccion|date:"H:i" }}
-                </td>
-                <td colspan="2">
+                <td colspan="3">
                     <strong>Sistema Operativo:</strong>
                     {{ incidente.sistema_operativo|default:"-" }}
                 </td>
@@ -151,21 +116,20 @@
             </tr>
             <tr>
                 <td colspan="6">
-                    <strong>Descripción del incidente:</strong><br>
+                    <strong>Descripci&oacute;n del incidente:</strong><br>
                     {{ incidente.descripcion }}
                 </td>
             </tr>
             <tr>
                 <td colspan="3">
                     <strong>Contramedidas aplicadas:</strong><br>
-                    {{ incidente.acciones_tomadas|default:"-" }}
+                    {{ incidente.contramedidas|default:"-" }}
                 </td>
                 <td colspan="3">
-                    <strong>Otra información de interés:</strong><br>
+                    <strong>Otra informaci&oacute;n de inter&eacute;s:</strong><br>
                     {{ incidente.otra_informacion|default:"-" }}
                 </td>
             </tr>
-
         </table>
     </div>
 </div>

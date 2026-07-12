@@ -29,4 +29,5 @@ urlpatterns = [
     path('personas/crear/', web_views.PersonaCreateView.as_view(), name='persona-create'),
     path('personas/<uuid:pk>/editar/', web_views.PersonaUpdateView.as_view(), name='persona-update'),
     path('personas/<uuid:pk>/eliminar/', web_views.PersonaDeleteView.as_view(), name='persona-delete'),
+    path('personas/<uuid:pk>/configurar-areas/', web_views.PersonaConfigurarAreasView.as_view(), name='persona-configurar-areas'),
 ]
