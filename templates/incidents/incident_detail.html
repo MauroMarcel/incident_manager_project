@@ -352,12 +352,12 @@
             </div>
         </div>
     </div>
-
+    <!-- Botones de accion -->
     {% if incidente.estado_incidente.code != 'CER' %}
     <div class="sgic-card-footer" style="display:flex;gap:8px;flex-wrap:wrap;">
         {% with p=request.user.perfil_persona %}
         {% if es_admin or incidente.supervisor == p or incidente.especialista_asignado == p %}
-            <a href="{% url 'incidente-wizard' incidente.pk '1' %}" class="sgic-btn sgic-btn-primary">Clasificar</a>
+            <a href="{% url 'incidente-wizard' incidente.pk '1' %}" class="sgic-btn sgic-btn-primary">Categorizar</a>
         {% endif %}
         {% if es_admin or incidente.supervisor == p %}
             {% if incidente.especialista_asignado %}
